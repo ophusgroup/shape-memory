@@ -57,4 +57,4 @@ site:
     hide_footer_links: true
   parts:
     footer: |
-      An interactive demo from the [Colin Ophus Lab](https://colab.stanford.edu), Department of Materials Science & Engineering, Stanford University. This work is supported by the project Development of NiTi Alloys for Energy-Efficient Elastocaloric Applications through Nanostructural Analysis (Electricity and Grid Systems cohort, PI Robert Sinclair).
+      An interactive demo from the [Colin Ophus Lab](https://colab.stanford.edu), Department of Materials Science & Engineering, Stanford University. This work is supported by the Sustainability Accelerator of the Doerr School through the project [Development of NiTi Alloys for Energy-Efficient Elastocaloric Applications](https://sustainability-accelerator.stanford.edu/project/development-niti-alloys-energy-efficient-elastocaloric-applications-through-nanostructural).

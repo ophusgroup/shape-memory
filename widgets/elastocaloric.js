@@ -98,6 +98,11 @@ function injectCSS(el, uid) {
   .${uid}-canvas{display:block;width:100%;height:380px;cursor:grab;}
   .${uid}-canvas:active{cursor:grabbing;}
   .${uid}-plot{display:block;width:100%;height:380px;}
+  /* wide layout: atoms span the full width on top, plot below */
+  .${uid}-wrap.wide .${uid}-row{flex-direction:column;flex-wrap:nowrap;}
+  .${uid}-wrap.wide .${uid}-panel{flex:0 0 auto;width:100%;min-width:0;}
+  .${uid}-wrap.wide .${uid}-canvas{height:600px;}
+  .${uid}-wrap.wide .${uid}-plot{height:300px;}
   .${uid}-ctrls{display:flex;gap:12px;align-items:center;flex-wrap:wrap;
     margin-top:12px;padding:10px 12px;border-radius:10px;
     background:var(--mystmd-surface,#f4f6fa);}
@@ -167,8 +172,17 @@ function makeScene(canvas, meta, positions, opMax, kind) {
   const OFFS = [];
   for (let a=-1;a<=1;a++) for (let b=-1;b<=1;b++) for (let c=-1;c<=1;c++) OFFS.push([a,b,c]);
   const cellRows = [[cell0[0],cell0[1],cell0[2]],[cell0[3],cell0[4],cell0[5]],[cell0[6],cell0[7],cell0[8]]];
-  for (let i = 0; i < na; i++) {
-    if (meta.numbers[i] !== CENTER_Z) continue;
+  // Pick a sparse, evenly spaced set of Ti centers FIRST, then search corners only
+  // for those (keeps setup O(MAXP*na), fast even for thousands of atoms).
+  const MAXP = 9;
+  const allCenters = [];
+  for (let i = 0; i < na; i++) if (meta.numbers[i] === CENTER_Z) allCenters.push(i);
+  const chosen = [];
+  if (allCenters.length) {
+    const stride = Math.max(1, Math.floor(allCenters.length / MAXP));
+    for (let k = 0; k < allCenters.length && chosen.length < MAXP; k += stride) chosen.push(allCenters[k]);
+  }
+  for (const i of chosen) {
     const ci = p0(i); const cand = [];
     for (let j = 0; j < na; j++) {
       if (meta.numbers[j] !== NBR_Z) continue;
@@ -191,15 +205,6 @@ function makeScene(canvas, meta, positions, opMax, kind) {
     }
     if (slot.includes(null)) continue;
     centers.push(i); corners.push(slot);
-  }
-  // keep only a sparse, evenly spaced subset of polyhedra so the view stays clear
-  const MAXP = 9;
-  if (centers.length > MAXP) {
-    const stride = Math.ceil(centers.length / MAXP);
-    const cc = [], co = [];
-    for (let k = 0; k < centers.length; k += stride) { cc.push(centers[k]); co.push(corners[k]); }
-    centers.length = 0; corners.length = 0;
-    cc.forEach((v, i) => { centers.push(v); corners.push(co[i]); });
   }
   const nPoly = centers.length;
   const vertsPerPoly = 6 * 6; // 6 faces * 2 tris * 3 verts
@@ -375,8 +380,10 @@ function render({ model, el }) {
   injectCSS(el, uid);
   const dataUrl = modelGet(model, "data_url", "widgets/data/niti_5050.bin");
   const metaUrl = modelGet(model, "meta_url", "widgets/data/niti_5050.json");
+  const wide = modelGet(model, "layout", "") === "wide";
+  const polyDefault = modelGet(model, "poly_default", true);
 
-  const wrap = document.createElement("div"); wrap.className = `${uid}-wrap`;
+  const wrap = document.createElement("div"); wrap.className = `${uid}-wrap${wide ? " wide" : ""}`;
   wrap.innerHTML = `
     <div class="${uid}-row">
       <div class="${uid}-panel">
@@ -400,7 +407,7 @@ function render({ model, el }) {
           <option value="op">order parameter</option>
           <option value="element">element</option>
         </select></label>
-      <label class="${uid}-chk"><input type="checkbox" class="chk-poly" checked/>polyhedra</label>
+      <label class="${uid}-chk"><input type="checkbox" class="chk-poly" ${polyDefault ? "checked" : ""}/>polyhedra</label>
       <div class="${uid}-read"></div>
     </div>`;
   el.appendChild(wrap);
@@ -435,6 +442,7 @@ function render({ model, el }) {
     const scene = makeScene(canvas3d, meta, positions, opMax, kind);
     const plot = makePlot(canvas2d, meta.curves, isTwin);
     scene.setOp(op);
+    scene.setShowPoly(chkPoly.checked);
     scene.frameCamera(meta.cells[0]); scene.resize();
 
     // figure-of-merit badge (when the dataset carries the metrics)
