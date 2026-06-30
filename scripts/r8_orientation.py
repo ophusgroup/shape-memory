@@ -95,6 +95,8 @@ data = {
     "emin": emin, "emax": emax,
     "specials": {k: round(eps_tr(v)*100, 2) for k, v in specials.items()},
     "Q_meV": Q_meV, "dT_ad_K": round(dT_ad, 0),
+    "a0": a0,
+    "variants": [Uv.tolist() for Uv in variants],   # 24 stretch matrices for the widget
     "note": "transformation strain from MACE-MP0 relaxed B19' (Bain correspondence, cubic variants)",
 }
 (OUT/"orientation.json").write_text(json.dumps(data))

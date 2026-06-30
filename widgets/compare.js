@@ -27,7 +27,9 @@ function metrics(curves, meta) {
   const cop = meta && meta.COP != null ? meta.COP : 0;
   const dT = meta && meta.dT_ad_K != null ? meta.dT_ad_K
     : (curves.temperature_k ? Math.max(...curves.temperature_k) - curves.temperature_k[0] : 0);
-  return { peak, cop, dT };
+  const emax = meta && meta.eps_max_pct != null ? meta.eps_max_pct
+    : (curves.strain ? Math.max(...curves.strain) * 100 : 0);
+  return { peak, cop, dT, emax };
 }
 
 async function render({ model, el }) {
@@ -147,13 +149,14 @@ async function render({ model, el }) {
     const rows = sets.map(s=>`<tr>
       <td><span class="${uid}-sw" style="background:${s.color}"></span>${s.composition}</td>
       <td>${s.m.peak.toFixed(2)}</td>
-      <td>${s.m.dT?s.m.dT.toFixed(0):"–"}</td>
+      <td>${s.m.emax?s.m.emax.toFixed(1):"–"}</td>
       <td>${s.m.cop.toFixed(1)}</td></tr>`).join("");
     tblwrap.innerHTML = `<table class="${uid}-t">
-      <tr><th>composition</th><th>σ_pk<br>(GPa)</th><th>ΔT_ad<br>(K)</th><th>COP</th></tr>${rows}</table>`;
-    cap.innerHTML = `σ_pk = peak transformation stress. ΔT_ad = adiabatic temperature rise. `+
+      <tr><th>texture</th><th>σ_pk<br>(GPa)</th><th>stroke<br>ε (%)</th><th>COP</th></tr>${rows}</table>`;
+    cap.innerHTML = `σ_pk = peak transformation stress. stroke = max recoverable strain. `+
       `COP = Q/ΔW (latent heat / hysteresis area), the elastocaloric figure of merit. `+
-      `Demo-scale single crystals; absolute values are not converged.`;
+      `ΔT_ad ≈ 137 K is the same for every texture (set by the latent heat). `+
+      `Constructed polycrystal model; absolute values are demo-scale.`;
   }
 
   buildTable(); draw();

@@ -1,8 +1,6 @@
 # Atomistic Shape-Memory & Elastocaloric Simulations
 
-Shape-memory alloys like NiTi (Nitinol) recover large deformations through a reversible, diffusionless transformation between a high-symmetry **austenite** phase and a low-symmetry **martensite** phase. The same transformation absorbs and releases latent heat, which makes these alloys candidates for solid-state **elastocaloric** cooling: stress the material and it warms, release the stress and it cools.
-
-This site runs that physics atom by atom. We build small periodic NiTi supercells, load and unload them, and compute energies and forces with the **MACE-MP0** machine-learning interatomic potential. The result is an interactive, browser-based view of the transformation as it happens.
+Shape-memory alloys like NiTi (Nitinol) recover large deformations through a reversible, diffusionless transformation between a high-symmetry **austenite** phase and a low-symmetry **martensite** phase. The same transformation absorbs and releases latent heat, which makes these alloys candidates for solid-state **elastocaloric** cooling: stress the material and it warms, release the stress and it cools. This site simulates small periodic NiTi supercells, loads and unloads them, and computes the energies and forces with the **MACE-MP0** machine-learning interatomic potential.
 
 :::{anywidget} ./widgets/elastocaloric.js
 {
@@ -24,6 +22,9 @@ The left panel shows the supercell viewed down its projection axis, with each at
 - [Elastocaloric loading cycle](demos.md)
 - [Shape-memory effect](shape-memory.md)
 - [Twinning and detwinning](microstructure.md)
+- [Polycrystal elastocaloric cycle](polycrystal.md)
+- [Orientation dependence](orientation.md)
+- [Texture and the figure of merit](texture.md)
 - [References](references.md)
 
 These are small cells for teaching and fast in-browser visualization. The energies and forces are computed with MACE-MP0, but cell sizes and stress magnitudes are demo-scale; quantitative, full-scale simulations are run on HPC.

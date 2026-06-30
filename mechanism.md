@@ -17,3 +17,11 @@ The defining change is a shear that opens the angle β from 90° to about 98°, 
 | Symmetry | high | low (several variants) |
 
 Because martensite has lower symmetry, it forms in several crystallographically equivalent variants. Neighboring variants meet on twin boundaries, which accommodate the shape change with little long-range strain. Looking down the B2 ⟨110⟩ directions shows the twin lamellae and atomic shuffles most clearly.
+
+## Energy along the transformation
+
+Relaxing the atoms at each point along the path from austenite to martensite gives the MACE-MP0 energy landscape:
+
+![Transformation energy landscape](images/energy_landscape.png)
+
+The energy decreases monotonically from B2 to B19', and austenite sits at an energy maximum: at 0 K MACE-MP0 finds B2 to be dynamically unstable, with no barrier protecting it from transforming. This is the well-known result that cubic B2 NiTi is stabilized only by temperature (through its vibrational entropy). It also explains the behavior on this site: the 0 K simulations are one-way (austenite is not metastable, so it shears into martensite and stays), while a reversible superelastic cycle requires the finite-temperature regime where austenite is the stable phase.

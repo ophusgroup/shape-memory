@@ -34,24 +34,27 @@ project:
         - file: methods-potential.md
         - file: methods-loading.md
         - file: methods-observables.md
-    - title: Simulated Results
+    - title: Simulated results
       children:
         - file: mechanism.md
         - file: demos.md
         - file: shape-memory.md
         - file: microstructure.md
+        - file: polycrystal.md
+        - file: orientation.md
+        - file: texture.md
     - title: Reference
       children:
         - file: references.md
 site:
   template: book-theme
-  title: Shape Memory & Elastocalorics
+  title: Nitinol Shape Memory & Elastocalorics
   options:
     style: ./style.css
-    logo_text: Shape Memory & Elastocalorics
+    logo_text: Nitinol Shape Memory & Elastocalorics
     outline_maxdepth: 2
     hide_search: false
     hide_footer_links: true
   parts:
     footer: |
-      An interactive demo from the [Colin Ophus Lab](https://colab.stanford.edu), Department of Materials Science & Engineering, Stanford University. Built with MACE-MP0 machine-learning molecular dynamics.
+      An interactive demo from the [Colin Ophus Lab](https://colab.stanford.edu), Department of Materials Science & Engineering, Stanford University. This work is supported by the project Development of NiTi Alloys for Energy-Efficient Elastocaloric Applications through Nanostructural Analysis (Electricity and Grid Systems cohort, PI Robert Sinclair).
