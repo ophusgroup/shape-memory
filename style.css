@@ -60,6 +60,15 @@ article a:not(.btn):not([class*="-wrap"] *) {
 article a:hover { color: var(--su-cardinal-bright); }
 html.dark article a:not(.btn) { color: #e79a9a; }
 
+/* footer links match the cardinal link color */
+footer a, footer a.link {
+  color: var(--su-cardinal) !important;
+  text-decoration-color: rgba(140, 21, 21, 0.35);
+  text-underline-offset: 2px;
+}
+footer a:hover { color: var(--su-cardinal-bright) !important; }
+html.dark footer a, html.dark footer a.link { color: #e79a9a !important; }
+
 /* ---- active navigation / table-of-contents item ---- */
 a[aria-current="page"] {
   color: var(--su-cardinal) !important;
