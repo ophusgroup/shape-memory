@@ -43,9 +43,18 @@ function opColor(t) {
   return [a[1][0] + f*(b[1][0]-a[1][0]), a[1][1] + f*(b[1][1]-a[1][1]), a[1][2] + f*(b[1][2]-a[1][2])];
 }
 
+// diverging colormap for twin variants: -1 = variant 2 (orange), 0 = boundary
+// (pale), +1 = variant 1 (blue)
+function variantColor(t) {
+  t = Math.max(-1, Math.min(1, t));
+  const v1 = [0.13, 0.45, 0.95], mid = [0.85, 0.85, 0.86], v2 = [0.95, 0.55, 0.10];
+  if (t >= 0) { const f = t; return [mid[0]+f*(v1[0]-mid[0]), mid[1]+f*(v1[1]-mid[1]), mid[2]+f*(v1[2]-mid[2])]; }
+  const f = -t; return [mid[0]+f*(v2[0]-mid[0]), mid[1]+f*(v2[1]-mid[1]), mid[2]+f*(v2[2]-mid[2])];
+}
+
 const ELEM = {
-  22: { sym: "Ti", r: 0.62 }, 28: { sym: "Ni", r: 0.50 }, 29: { sym: "Cu", r: 0.52 },
-  72: { sym: "Hf", r: 0.66 }, 26: { sym: "Fe", r: 0.50 }, 46: { sym: "Pd", r: 0.58 },
+  22: { sym: "Ti", r: 0.72 }, 28: { sym: "Ni", r: 0.42 }, 29: { sym: "Cu", r: 0.44 },
+  72: { sym: "Hf", r: 0.80 }, 26: { sym: "Fe", r: 0.42 }, 46: { sym: "Pd", r: 0.52 },
 };
 function elemInfo(z) { return ELEM[z] || { sym: String(z), r: 0.55 }; }
 
@@ -93,15 +102,19 @@ function injectCSS(el, uid) {
     margin-top:12px;padding:10px 12px;border-radius:10px;
     background:var(--mystmd-surface,#f4f6fa);}
   .${uid}-btn{appearance:none;border:none;border-radius:8px;padding:8px 16px;
-    font-size:14px;font-weight:600;cursor:pointer;background:#8c1515;color:#fff;}
+    font-size:14px;font-weight:600;cursor:pointer;background:#8c1515;color:#fff;
+    min-width:104px;text-align:center;box-sizing:border-box;}
   .${uid}-btn:hover{background:#6f1010;}
+  .${uid}-elleg{position:absolute;top:10px;left:12px;display:flex;align-items:center;
+    gap:5px;font-size:11px;color:#cfd8e6;}
+  .${uid}-elleg i{display:inline-block;border-radius:50%;background:#9aa3ad;}
   .${uid}-slider{flex:1 1 150px;min-width:110px;}
   .${uid}-sel{padding:6px 8px;border-radius:7px;border:1px solid #c5ccd6;
     background:#fff;font-size:13px;color:#1a1a1a;}
   .${uid}-chk{display:inline-flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;}
   .${uid}-tag{position:absolute;top:10px;left:12px;font-size:12px;font-weight:600;
     color:#cfd8e6;background:rgba(0,0,0,.32);padding:3px 9px;border-radius:20px;}
-  .${uid}-fom{position:absolute;bottom:10px;right:12px;font-size:12px;color:#33404f;
+  .${uid}-fom{position:absolute;bottom:46px;right:12px;font-size:12px;color:#33404f;
     background:rgba(255,255,255,.7);padding:4px 9px;border-radius:8px;text-align:right;
     line-height:1.35;font-variant-numeric:tabular-nums;}
   .${uid}-fom b{font-weight:700;}
@@ -116,7 +129,8 @@ function injectCSS(el, uid) {
 }
 
 // ------------------------------------------------------------------ 3D view
-function makeScene(canvas, meta, positions, opMax) {
+function makeScene(canvas, meta, positions, opMax, kind) {
+  const colFn = kind === "twin" ? variantColor : opColor;
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
   const scene = new THREE.Scene();
@@ -210,7 +224,7 @@ function makeScene(canvas, meta, positions, opMax) {
     const b = new THREE.Vector3(cell[3],cell[4],cell[5]);
     const c = new THREE.Vector3(cell[6],cell[7],cell[8]);
     center = a.clone().add(b).add(c).multiplyScalar(0.5);
-    extent = Math.max(a.length(), b.length()) * 0.62; // in-plane half-size for ortho fit
+    extent = Math.max(a.length(), b.length()) * 0.78; // in-plane half-size for ortho fit (zoomed out a bit)
   }
   function setFrustum(aspect, zoom) {
     const r = extent / zoom;
@@ -230,7 +244,7 @@ function makeScene(canvas, meta, positions, opMax) {
     group.add(boxLines);
   }
 
-  let showPoly = false, sphereScale = 1.15;
+  let showPoly = true, sphereScale = 0.85;
   // interpolate between frames fa and fb by blend bl in [0,1] for smooth motion
   function update(fa, fb, bl, colorMode) {
     const bA=fa*na*3, bB=fb*na*3, oA=fa*na, oB=fb*na;
@@ -245,7 +259,7 @@ function makeScene(canvas, meta, positions, opMax) {
       mesh.setMatrixAt(i, dummy.matrix);
       let col = colorMode==="element"
         ? (meta.numbers[i]===28 ? [0.55,0.60,0.66] : [0.86,0.62,0.30])
-        : opColor(opv(i)/(opMax||1));
+        : colFn(opv(i)/(opMax||1));
       mesh.setColorAt(i, new THREE.Color(col[0],col[1],col[2]));
     }
     mesh.instanceMatrix.needsUpdate = true;
@@ -260,7 +274,7 @@ function makeScene(canvas, meta, positions, opMax) {
         const pf = (i)=>[px(i),py(i),pz(i)];
         let w = 0;
         for (let k=0;k<nPoly;k++){
-          const c = colorMode==="element" ? [0.45,0.6,0.85] : opColor(opv(centers[k])/(opMax||1));
+          const c = colorMode==="element" ? [0.45,0.6,0.85] : colFn(opv(centers[k])/(opMax||1));
           const cv = [];  // 8 corner positions = neighbor image positions
           for (let s=0;s<8;s++){
             const { j, off } = corners[k][s];
@@ -309,10 +323,10 @@ function makeScene(canvas, meta, positions, opMax) {
 }
 
 // ------------------------------------------------------------------ 2D plot
-function makePlot(canvas, curves) {
+function makePlot(canvas, curves, isTwin) {
   const ctx = canvas.getContext("2d");
   const series = {
-    stress: { y: curves.stress_gpa, label: "axial stress", unit: "GPa", color: "#e23a3a" },
+    stress: { y: curves.stress_gpa, label: isTwin ? "shear stress" : "axial stress", unit: "GPa", color: "#e23a3a" },
     energy: { y: curves.energy_per_atom, label: "energy", unit: "eV/atom", color: "#1763d6" },
     heat: { y: curves.heat_flow_ev, label: "heat flow / step", unit: "eV", color: "#13a88a" },
     cumheat: { y: curves.cum_heat_ev, label: "cumulative heat", unit: "eV", color: "#a23bbd" },
@@ -338,7 +352,7 @@ function makePlot(canvas, curves) {
     ctx.textAlign="center";ctx.textBaseline="top";
     for(let g=0;g<=5;g++){ const xx=x0+(x1-x0)*g/5; ctx.fillText((xmin+(xmax-xmin)*g/5).toFixed(1),xx,y0+8*dpr); }
     ctx.font=`${13*dpr}px -apple-system,sans-serif`; ctx.textAlign="center";
-    ctx.fillText("strain (%)",(x0+x1)/2,H-16*dpr);
+    ctx.fillText(isTwin ? "shear strain (%)" : "strain (%)",(x0+x1)/2,H-16*dpr);
     ctx.save();ctx.translate(16*dpr,(y0+y1)/2);ctx.rotate(-Math.PI/2);ctx.fillText(`${s.label} (${s.unit})`,0,0);ctx.restore();
     ctx.strokeStyle=dark?"rgba(255,255,255,.22)":"rgba(0,0,0,.18)"; ctx.lineWidth=1.5*dpr; ctx.beginPath();
     for(let i=0;i<strain.length;i++){ const X=sx(strain[i]),Y=sy(s.y[i]); i?ctx.lineTo(X,Y):ctx.moveTo(X,Y); } ctx.stroke();
@@ -367,13 +381,12 @@ function render({ model, el }) {
     <div class="${uid}-row">
       <div class="${uid}-panel">
         <canvas class="${uid}-canvas"></canvas>
-        <div class="${uid}-tag">supercell · view down projection axis</div>
-        <div class="${uid}-legtxt"><span>austenite (hot)</span><span>martensite</span></div>
+        <div class="${uid}-elleg"><i style="width:13px;height:13px"></i>Ti<i style="width:8px;height:8px"></i>Ni</div>
+        <div class="${uid}-legtxt"><span>austenite</span><span>martensite</span></div>
         <div class="${uid}-legend"></div>
       </div>
       <div class="${uid}-panel light">
         <canvas class="${uid}-plot"></canvas>
-        <div class="${uid}-tag" style="color:#33404f;background:rgba(255,255,255,.5)">load → unload cycle</div>
         <div class="${uid}-fom"></div>
       </div>
     </div>
@@ -387,7 +400,7 @@ function render({ model, el }) {
           <option value="op">order parameter</option>
           <option value="element">element</option>
         </select></label>
-      <label class="${uid}-chk"><input type="checkbox" class="chk-poly"/>polyhedra</label>
+      <label class="${uid}-chk"><input type="checkbox" class="chk-poly" checked/>polyhedra</label>
       <div class="${uid}-read"></div>
     </div>`;
   el.appendChild(wrap);
@@ -401,24 +414,34 @@ function render({ model, el }) {
 
   loadData(dataUrl, metaUrl).then(({ meta, positions, op }) => {
     const nf = meta.n_frames; slider.max = String(nf-1);
-    const opMax = (meta.op_range && meta.op_range[1]) || 0.2;
+    const kind = (meta.meta && meta.meta.kind) || "";
+    const isTwin = kind === "twin";
+    const opMax = isTwin ? 1.0
+      : ((meta.op_range && Math.max(Math.abs(meta.op_range[0]), Math.abs(meta.op_range[1]))) || 0.2);
 
-    // populate plot selector (include temperature only if present)
-    const opts = [["stress","stress – strain"],["energy","energy"],["heat","heat flow"],["cumheat","cumulative heat"]];
-    if (meta.curves.temperature_k) opts.push(["temp","temperature"]);
+    // twin: only the shear stress-strain is meaningful; otherwise full menu
+    const opts = isTwin
+      ? [["stress","shear stress – strain"]]
+      : [["stress","stress – strain"],["energy","energy"],["heat","heat flow"],["cumheat","cumulative heat"]]
+        .concat(meta.curves.temperature_k ? [["temp","temperature"]] : []);
     selPlot.innerHTML = opts.map(([v,l])=>`<option value="${v}">${l}</option>`).join("");
 
-    const scene = makeScene(canvas3d, meta, positions, opMax);
-    const plot = makePlot(canvas2d, meta.curves);
+    if (isTwin) {
+      // relabel the colormap legend and the colorbar gradient for variants
+      const lt = wrap.querySelector(`.${uid}-legtxt`); if (lt) lt.innerHTML = "<span>variant 2</span><span>variant 1</span>";
+      const lg = wrap.querySelector(`.${uid}-legend`); if (lg) lg.style.background = "linear-gradient(90deg,rgb(242,140,26),rgb(217,217,219),rgb(33,115,242))";
+    }
+
+    const scene = makeScene(canvas3d, meta, positions, opMax, kind);
+    const plot = makePlot(canvas2d, meta.curves, isTwin);
     scene.setOp(op);
     scene.frameCamera(meta.cells[0]); scene.resize();
 
     // figure-of-merit badge (when the dataset carries the metrics)
     const fomEl = wrap.querySelector(`.${uid}-fom`); const m = meta.meta || {};
-    if (m.COP || m.dT_ad_K || m.eps_tr) {
+    if (m.COP || m.eps_tr) {
       let h = "";
       if (m.COP) h += `COP = Q/ΔW = <b>${m.COP.toFixed(1)}</b><br>`;
-      if (m.dT_ad_K) h += `ΔT<sub>ad</sub> ≈ <b>${m.dT_ad_K.toFixed(0)} K</b><br>`;
       if (m.eps_tr) h += `ε<sub>tr</sub> = <b>${(m.eps_tr*100).toFixed(1)}%</b>`;
       fomEl.innerHTML = h;
     } else { fomEl.style.display = "none"; }
@@ -438,8 +461,9 @@ function render({ model, el }) {
       const c = meta.curves;
       const E = lerp(c.strain[fa], c.strain[fb], bl)*100;
       const S = lerp(c.stress_gpa[fa], c.stress_gpa[fb], bl);
-      let html = `<span>ε <b>${E.toFixed(2)}%</b></span><span>σ <b>${S.toFixed(2)} GPa</b></span>`;
-      if (c.temperature_k) html += `<span>T <b>${lerp(c.temperature_k[fa],c.temperature_k[fb],bl).toFixed(0)} K</b></span>`;
+      let html = `<span>${isTwin?"γ":"ε"} <b>${E.toFixed(2)}%</b></span><span>σ <b>${S.toFixed(2)} GPa</b></span>`;
+      if (isTwin) { /* shear demo: no thermal readout */ }
+      else if (c.temperature_k) html += `<span>T <b>${lerp(c.temperature_k[fa],c.temperature_k[fb],bl).toFixed(0)} K</b></span>`;
       else html += `<span>Q <b>${lerp(c.cum_heat_ev[fa],c.cum_heat_ev[fb],bl).toFixed(3)} eV</b></span>`;
       read.innerHTML = html; slider.value = String(Math.round(tf));
     }

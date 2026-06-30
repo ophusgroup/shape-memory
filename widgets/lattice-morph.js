@@ -42,7 +42,7 @@ function render({ model, el }) {
     .${uid}-note{margin-top:12px;font-size:12.5px;line-height:1.5;opacity:.85;}
     .${uid}-ctrls{display:flex;gap:12px;align-items:center;margin-top:12px;padding:10px 12px;
       border-radius:10px;background:var(--mystmd-surface,#f4f6fa);}
-    .${uid}-btn{border:none;border-radius:8px;padding:8px 16px;font-weight:600;cursor:pointer;background:#8c1515;color:#fff;}
+    .${uid}-btn{border:none;border-radius:8px;padding:8px 16px;font-weight:600;cursor:pointer;background:#8c1515;color:#fff;min-width:104px;text-align:center;box-sizing:border-box;}
     .${uid}-sld{flex:1;}
     .${uid}-leg{position:absolute;top:10px;left:12px;font-size:12px;color:#cfd8e6;}
     .${uid}-leg i{display:inline-block;width:10px;height:10px;border-radius:50%;margin:0 3px 0 9px;vertical-align:middle;}
@@ -72,7 +72,7 @@ function render({ model, el }) {
   const elPhase=wrap.querySelector(`.${uid}-phase`), elSub=wrap.querySelector(`.${uid}-sub`),
         elPar=wrap.querySelector(`.${uid}-par`), elNote=wrap.querySelector(`.${uid}-note`);
 
-  const NX = 3, NY = 2;  // tile a few cells so the shear reads clearly
+  const NX = 4, NY = 4;  // tile a few cells so the shear reads clearly
   const lerp = (p,q,t)=>p+t*(q-p);
 
   function draw(t) {
@@ -103,7 +103,7 @@ function render({ model, el }) {
       g.addColorStop(0, col[1]); g.addColorStop(1, col[0]);
       ctx.fillStyle=g; ctx.beginPath(); ctx.arc(x,y,r,0,2*Math.PI); ctx.fill(); }
     const NI=["#7d8794","#c4ccd6"], TI=["#c98a1c","#f0c266"];
-    const rNi=0.30*a*scale, rTi=0.40*a*scale;
+    const rNi=0.18*a*scale, rTi=0.30*a*scale;
     for (let i=0;i<=NX;i++) for (let j=0;j<=NY;j++) atom(i*a, j*h, rNi, NI);
     for (let i=0;i<NX;i++) for (let j=0;j<NY;j++){
       const sh = shuffle * (j%2===0?1:-1);

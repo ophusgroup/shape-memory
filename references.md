@@ -24,6 +24,8 @@ Each dataset has a script under `scripts/`:
 | `m6_hero2d.py` | large pseudo-2D athermal cycle (the one-way shape-memory demo) |
 | `m7_superelastic.py` | reversible superelastic cycle (the landing-page demo) |
 | `m8_doping.py` | per-composition superelastic loops and the comparison index |
+| `r3_latent_heat.py` | converged latent heat and heat capacity (MD) |
+| `r4_twin.py` | twinned martensite and detwinning |
 | `m5_md.py` | finite-temperature molecular-dynamics loop (HPC scale) |
 
 ## Scope

@@ -9,17 +9,6 @@ A NiTi cell driven through one superelastic load/unload cycle. Above the austeni
 }
 :::
 
-The badge reports COP = Q / ΔW, the adiabatic temperature change ΔT_ad, and the transformation strain ε_tr. Use the **plot** menu to change the right-panel quantity, **color** to switch atom coloring, and **polyhedra** to outline coordination cells. Drag to tilt, scroll to zoom.
+The badge reports the figure of merit COP = Q / ΔW and the transformation strain ε_tr. Use the **plot** menu to change the right-panel quantity, **color** to switch atom coloring, and **polyhedra** to outline coordination cells. Drag to tilt, scroll to zoom.
 
-The austenite and martensite endpoints are MACE-MP0 relaxed structures and the latent heat is their energy difference; the reversible loop follows the standard superelastic model. MACE overestimates the latent heat by roughly a factor of two, so ΔT_ad is an upper bound, while COP (a ratio) is near the measured NiTi value of about 12.
-
-## Shape-memory effect
-
-Below the transformation temperature the same cell behaves differently. This loading cycle is computed athermally with MACE-MP0 on a 200-atom cell: the cell shears into martensite on loading and stays there on unloading, because at 0 K martensite is the lower-energy phase. The stress-strain curve is an open loop, the signature of the one-way shape-memory effect.
-
-:::{anywidget} ./widgets/elastocaloric.js
-{
-  "data_url": "../widgets/data/niti_2d.bin",
-  "meta_url": "../widgets/data/niti_2d.json"
-}
-:::
+The austenite and martensite endpoints are MACE-MP0 relaxed structures; the reversible loop follows the standard superelastic model. The latent heat is the MACE-MP0 energy difference of the relaxed phases (about 35 meV/atom), which overestimates the measured value by roughly threefold. The adiabatic temperature change scales with the latent heat, so the temperature curve is an upper bound; the measured NiTi value is about 25 K. The COP (a ratio) is less sensitive to this and falls near the measured NiTi value of about 12.

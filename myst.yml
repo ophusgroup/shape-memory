@@ -18,6 +18,7 @@ project:
   exclude:
     - README.md
     - results.md
+    - methods.md
     - scripts/**
     - src/**
     - .venv/**
@@ -30,11 +31,15 @@ project:
         - file: elastocaloric.md
     - title: Methods
       children:
-        - file: methods.md
-    - title: Simulations
+        - file: methods-potential.md
+        - file: methods-loading.md
+        - file: methods-observables.md
+    - title: Simulated Results
       children:
         - file: mechanism.md
         - file: demos.md
+        - file: shape-memory.md
+        - file: microstructure.md
     - title: Reference
       children:
         - file: references.md

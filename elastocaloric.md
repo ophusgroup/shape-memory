@@ -20,4 +20,4 @@ Two quantities characterize an elastocaloric material:
 
 ## What we compute
 
-For each loading cycle we record the per-step heat flow and a derived adiabatic temperature change (see [methods](methods.md)). The [loading-cycle demo](demos.md) plots both; the temperature rises at the transformation as the latent heat is released.
+For each loading cycle we record the per-step heat flow and a derived adiabatic temperature change (see [observables](methods-observables.md)). The [loading-cycle demo](demos.md) plots both; the temperature rises at the transformation as the latent heat is released.

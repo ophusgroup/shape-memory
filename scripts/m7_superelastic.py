@@ -23,7 +23,9 @@ print(f"supercell {atoms.info['supercell']} -> {len(atoms)} atoms")
 t0 = time.time()
 A, M, eA, eM = relax_endpoints(atoms, calc)
 print(f"A E={eA/len(A):.4f}  M E={eM/len(A):.4f} eV/atom  dH={(eA-eM)/len(A)*1000:+.1f} meV/atom")
-res = superelastic_loop(A, M, eA, eM)
+# use the converged large-cell latent heat (scripts/r3_latent_heat.py) for the
+# thermodynamics, so the reported dT_ad and COP are not biased by the thin cell
+res = superelastic_loop(A, M, eA, eM, dH_override=0.0355)  # eV/atom, canonical B19' (r7)
 print(f"done in {time.time()-t0:.0f}s  COP={res.meta['COP']:.1f}  "
       f"eps_tr={res.meta['eps_tr']*100:.1f}%  dT_ad={res.meta['dT_ad_K']:.0f} K")
 export(res, OUT, "niti_superelastic")

@@ -17,9 +17,13 @@ The left panel shows the supercell viewed down its projection axis, with each at
 
 - [Martensitic transformation](background.md)
 - [The elastocaloric effect](elastocaloric.md)
-- [Atomistic simulation](methods.md)
+- [Interatomic potential](methods-potential.md)
+- [Loading protocols](methods-loading.md)
+- [Observables](methods-observables.md)
 - [The B2 to B19' mechanism](mechanism.md)
 - [Elastocaloric loading cycle](demos.md)
+- [Shape-memory effect](shape-memory.md)
+- [Twinning and detwinning](microstructure.md)
 - [References](references.md)
 
 These are small cells for teaching and fast in-browser visualization. The energies and forces are computed with MACE-MP0, but cell sizes and stress magnitudes are demo-scale; quantitative, full-scale simulations are run on HPC.

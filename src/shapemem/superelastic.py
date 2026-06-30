@@ -44,11 +44,16 @@ def relax_endpoints(atoms, calc, fmax=0.02):
 def superelastic_loop(
     A, M, eA, eM,
     EA=45.0, EM=28.0, sf=0.58, sr=0.17, hsl=0.8,
-    n_load=30, n_unload=30, op_cutoff=3.5,
+    n_load=30, n_unload=30, op_cutoff=3.5, dH_override=None,
 ) -> LoopResult:
-    """Construct a closed superelastic loop morphing A <-> M (loading along x)."""
+    """Construct a closed superelastic loop morphing A <-> M (loading along x).
+
+    dH_override (eV/atom): use a converged large-cell latent heat for the
+    thermodynamics (temperature, Q, COP) while keeping the thin demo cell for
+    the geometry/visualization.
+    """
     na = len(A)
-    dH = (eA - eM) / na  # eV/atom, > 0 when martensite is lower (latent heat)
+    dH = dH_override if dH_override is not None else (eA - eM) / na
     cellA, cellM = np.array(A.cell), np.array(M.cell)
     # Remove the rigid-body rotation from the A->M deformation: keep only the
     # symmetric stretch (pure strain e_rr, e_cc, e_rc), so the cell does not
