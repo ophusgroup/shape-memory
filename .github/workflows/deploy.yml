@@ -1,0 +1,62 @@
+name: Build and deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install MyST CLI
+        run: npm install -g mystmd
+
+      - name: Build MyST static site
+        env:
+          # GitHub Pages serves this repo at /shape-memory/. MyST uses BASE_URL
+          # to prefix asset paths so internal links resolve correctly.
+          BASE_URL: /shape-memory
+        run: myst build --html
+
+      - name: Stage anywidget data alongside the built site
+        run: |
+          # MyST hashes + copies the anywidget JS itself, but the data files the
+          # widget fetches at runtime are opaque strings to MyST. Stage them at
+          # the same widgets/data/ path the model URLs point at.
+          mkdir -p _build/html/widgets/data
+          cp -r public/widgets/data/. _build/html/widgets/data/
+          echo "Built site:" && ls -la _build/html
+          echo "Widget data:" && ls -la _build/html/widgets/data
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _build/html
+
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

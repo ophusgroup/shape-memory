@@ -1,0 +1,24 @@
+{
+  "reference": {
+    "name": "niti_5050",
+    "label": "NiTi 50:50 (reference)",
+    "json": "niti_5050.json"
+  },
+  "doped": [
+    {
+      "name": "niti_cu",
+      "label": "Ni-Ti-Cu (Cu on Ni)",
+      "json": "niti_cu.json"
+    },
+    {
+      "name": "niti_hf",
+      "label": "Ni-Ti-Hf (Hf on Ti)",
+      "json": "niti_hf.json"
+    },
+    {
+      "name": "ni_rich",
+      "label": "Ni-rich (Ti to Ni)",
+      "json": "ni_rich.json"
+    }
+  ]
+}

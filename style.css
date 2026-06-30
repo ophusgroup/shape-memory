@@ -1,0 +1,29 @@
+/* Site theming on top of MyST book-theme */
+
+:root {
+  --mystmd-surface: #f4f6fa;
+}
+html.dark {
+  --mystmd-surface: #1b2230;
+}
+
+/* Accent the site title */
+.heading-title,
+a.logo-text {
+  color: #1763d6;
+}
+html.dark .heading-title,
+html.dark a.logo-text {
+  color: #5b9bff;
+}
+
+/* Give embedded widgets a little breathing room */
+.anywidget,
+[class*="-wrap"] {
+  margin: 1.2rem 0;
+}
+
+/* Tidy admonition spacing */
+.admonition {
+  border-radius: 10px;
+}

@@ -1,0 +1,51 @@
+# See docs at: https://mystmd.org/guide/frontmatter
+version: 1
+project:
+  id: shape-memory-elastocaloric
+  title: Atomistic Shape-Memory & Elastocaloric Simulations
+  short_title: Shape Memory
+  description: Interactive atomistic demos of NiTi shape-memory and elastocaloric behavior, powered by MACE-MP0 machine-learning molecular dynamics.
+  keywords:
+    - Shape memory alloys
+    - NiTi
+    - Elastocalorics
+    - Martensitic transformation
+    - Machine-learning potentials
+    - MACE
+  github: https://github.com/ophusgroup/shape-memory
+  open_access: true
+  license: CC-BY-4.0
+  date: 2026-06-29
+  authors:
+    - id: cophus
+      name: Colin Ophus
+      corresponding: true
+      email: cophus@gmail.com
+      orcid: 0000-0003-2348-8558
+      affiliations:
+        - id: lbnl
+          institution: Lawrence Berkeley National Laboratory
+          department: National Center for Electron Microscopy, Molecular Foundry
+          address: 1 Cyclotron Road, Berkeley, CA, USA, 94720
+          ror: 02jbv0t02
+  resources:
+    - widgets/**/*
+  exclude:
+    - README.md
+    - scripts/**
+    - src/**
+    - .venv/**
+    - .github/**
+  toc:
+    - file: index.md
+    - file: background.md
+    - file: methods.md
+    - file: demos.md
+    - file: results.md
+site:
+  template: book-theme
+  options:
+    style: ./style.css
+    logo_text: Shape Memory & Elastocalorics
+    outline_maxdepth: 2
+    hide_search: false

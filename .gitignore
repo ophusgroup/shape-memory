@@ -1,0 +1,21 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+build/
+dist/
+
+# MyST
+_build/
+.myst.session.json
+
+# MACE model cache (large, auto-downloaded)
+*.model
+
+# OS
+.DS_Store
+
+# generated inspection plots
+scripts/*_loop.png
+scripts/*.log
