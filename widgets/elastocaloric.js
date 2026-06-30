@@ -98,11 +98,12 @@ function injectCSS(el, uid) {
   .${uid}-canvas{display:block;width:100%;height:380px;cursor:grab;}
   .${uid}-canvas:active{cursor:grabbing;}
   .${uid}-plot{display:block;width:100%;height:380px;}
-  /* wide layout: atoms span the full width on top, plot below */
-  .${uid}-wrap.wide .${uid}-row{flex-direction:column;flex-wrap:nowrap;}
-  .${uid}-wrap.wide .${uid}-panel{flex:0 0 auto;width:100%;min-width:0;}
-  .${uid}-wrap.wide .${uid}-canvas{height:600px;}
+  /* wide layout: a large SQUARE atoms frame on top, plot below, both centered */
+  .${uid}-wrap.wide .${uid}-row{flex-direction:column;flex-wrap:nowrap;align-items:center;}
+  .${uid}-wrap.wide .${uid}-panel{flex:0 0 auto;width:100%;min-width:0;max-width:680px;}
+  .${uid}-wrap.wide .${uid}-canvas{aspect-ratio:1;height:auto;}
   .${uid}-wrap.wide .${uid}-plot{height:300px;}
+  .${uid}-wrap.wide .${uid}-ctrls{max-width:680px;margin-left:auto;margin-right:auto;}
   .${uid}-ctrls{display:flex;gap:12px;align-items:center;flex-wrap:wrap;
     margin-top:12px;padding:10px 12px;border-radius:10px;
     background:var(--mystmd-surface,#f4f6fa);}
@@ -134,7 +135,8 @@ function injectCSS(el, uid) {
 }
 
 // ------------------------------------------------------------------ 3D view
-function makeScene(canvas, meta, positions, opMax, kind) {
+function makeScene(canvas, meta, positions, opMax, kind, fitFactor) {
+  const FIT = fitFactor || 0.78;
   const colFn = kind === "twin" ? variantColor : opColor;
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
@@ -229,7 +231,7 @@ function makeScene(canvas, meta, positions, opMax, kind) {
     const b = new THREE.Vector3(cell[3],cell[4],cell[5]);
     const c = new THREE.Vector3(cell[6],cell[7],cell[8]);
     center = a.clone().add(b).add(c).multiplyScalar(0.5);
-    extent = Math.max(a.length(), b.length()) * 0.78; // in-plane half-size for ortho fit (zoomed out a bit)
+    extent = Math.max(a.length(), b.length()) * FIT; // in-plane half-size for ortho fit
   }
   function setFrustum(aspect, zoom) {
     const r = extent / zoom;
@@ -439,7 +441,7 @@ function render({ model, el }) {
       const lg = wrap.querySelector(`.${uid}-legend`); if (lg) lg.style.background = "linear-gradient(90deg,rgb(242,140,26),rgb(217,217,219),rgb(33,115,242))";
     }
 
-    const scene = makeScene(canvas3d, meta, positions, opMax, kind);
+    const scene = makeScene(canvas3d, meta, positions, opMax, kind, wide ? 0.6 : 0.78);
     const plot = makePlot(canvas2d, meta.curves, isTwin);
     scene.setOp(op);
     scene.setShowPoly(chkPoly.checked);

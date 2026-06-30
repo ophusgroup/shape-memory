@@ -44,6 +44,9 @@ jobs:
           echo "Built site:" && ls -la _build/html
           echo "Widget data:" && ls -la _build/html/widgets/data
 
+      - name: Post-build HTML tweaks (light-mode default)
+        run: python3 scripts/postbuild.py _build/html
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
