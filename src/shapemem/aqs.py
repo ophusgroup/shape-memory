@@ -36,6 +36,7 @@ from .order import LocalStrain
 _UNIAXIAL_MASK = [True, True, False, True, True, True]
 
 EV_PER_A3_TO_GPA = 160.21766208
+T_BASE_K = 300.0  # baseline temperature for the adiabatic dT estimate
 
 
 @dataclass
@@ -50,13 +51,20 @@ class LoopResult:
     cells: np.ndarray                # (n_frames, 3, 3) float32
     op: np.ndarray                   # (n_frames, n_atoms) float32 local shear
     numbers: np.ndarray
+    temperature_k: np.ndarray | None = None  # per-frame temperature (MD only)
     meta: dict = field(default_factory=dict)
 
 
-def _apply_axial_strain(atoms: Atoms, ratio: float) -> None:
-    """Multiply the lab-z dimension by `ratio`, scaling atoms with it."""
-    F = np.diag([1.0, 1.0, ratio])
+def _apply_axial_strain(atoms: Atoms, ratio: float, axis: int = 2) -> None:
+    """Multiply the lab dimension `axis` by `ratio`, scaling atoms with it."""
+    diag = [1.0, 1.0, 1.0]; diag[axis] = ratio
+    F = np.diag(diag)
     atoms.set_cell(atoms.cell[:] @ F.T, scale_atoms=True)
+
+
+def _mask_for_axis(axis: int):
+    """Voigt mask freeing every component except the driven axial strain."""
+    return [axis != 0, axis != 1, axis != 2, True, True, True]
 
 
 def run_loop(
@@ -67,9 +75,22 @@ def run_loop(
     fmax: float = 0.03,
     max_relax_steps: int = 120,
     op_cutoff: float = 3.5,
+    cell_mask=None,
+    relax_cell: bool = True,
+    axis: int = 0,
     verbose: bool = True,
 ) -> LoopResult:
-    """Run one load/unload cycle and return per-frame trajectory + curves."""
+    """Run one load/unload cycle and return per-frame trajectory + curves.
+
+    cell_mask: Voigt mask [xx,yy,zz,yz,xz,xy] of cell components free to relax
+        (zz is always driven by the imposed strain, so keep it False).
+        Default frees transverse + shear (allows full monoclinic martensite,
+        which is one-way at 0 K). Use [True,True,False,False,False,False] to
+        forbid shear, which keeps the strain-induced transformation reversible.
+    relax_cell: if False, relax atomic coordinates only at the imposed cell.
+    """
+    if cell_mask is None:
+        cell_mask = _mask_for_axis(axis)
     atoms = atoms.copy()
     atoms.calc = calc
     op_engine = LocalStrain(atoms, cutoff=op_cutoff)
@@ -79,7 +100,7 @@ def run_loop(
     down = np.linspace(eps_max, 0.0, n_steps + 1)[1:]
     schedule = np.concatenate([up, down])
 
-    L0_z = atoms.cell[2, 2]
+    L0_z = atoms.cell[axis, axis]
     V0 = atoms.get_volume()
     n_atoms = len(atoms)
 
@@ -90,13 +111,14 @@ def run_loop(
     for k, eps in enumerate(schedule):
         ratio = (1.0 + eps) / (1.0 + prev_eps)
         if abs(ratio - 1.0) > 1e-12:
-            _apply_axial_strain(atoms, ratio)
+            _apply_axial_strain(atoms, ratio, axis)
         prev_eps = eps
 
-        opt = FIRE(FrechetCellFilter(atoms, mask=_UNIAXIAL_MASK), logfile=None)
+        target = FrechetCellFilter(atoms, mask=cell_mask) if relax_cell else atoms
+        opt = FIRE(target, logfile=None)
         opt.run(fmax=fmax, steps=max_relax_steps)
 
-        s_zz = atoms.get_stress(voigt=True)[2] * EV_PER_A3_TO_GPA  # eV/A^3 -> GPa
+        s_zz = atoms.get_stress(voigt=True)[axis] * EV_PER_A3_TO_GPA  # eV/A^3 -> GPa
         u = atoms.get_potential_energy()
         strain.append(eps)
         stress.append(s_zz)  # ASE convention: tensile strain -> positive stress
@@ -122,6 +144,13 @@ def run_loop(
     heat_flow = dW - dU
     cum_heat = np.cumsum(heat_flow)
 
+    # adiabatic temperature change: released transformation heat raised against
+    # a Dulong-Petit lattice heat capacity (3 k_B / atom). This is the
+    # elastocaloric dT_ad if no heat escapes the cell during the cycle.
+    kB = 8.617333e-5  # eV/K
+    cv_total = n_atoms * 3.0 * kB
+    temperature = T_BASE_K + cum_heat / cv_total
+
     return LoopResult(
         strain=strain,
         stress_gpa=stress,
@@ -133,6 +162,7 @@ def run_loop(
         cells=np.array(cells, dtype=np.float32),
         op=np.array(ops, dtype=np.float32),
         numbers=atoms.get_atomic_numbers(),
+        temperature_k=temperature,
         meta={
             "eps_max": eps_max,
             "n_steps": int(n_steps),

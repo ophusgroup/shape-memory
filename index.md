@@ -6,20 +6,20 @@ This site runs that physics atom by atom. We build small periodic NiTi supercell
 
 :::{anywidget} ./widgets/elastocaloric.js
 {
-  "data_url": "widgets/data/niti_5050.bin",
-  "meta_url": "widgets/data/niti_5050.json"
+  "data_url": "widgets/data/niti_superelastic.bin",
+  "meta_url": "widgets/data/niti_superelastic.json"
 }
 :::
 
 The left panel shows the supercell viewed down its projection axis, with each atom colored by a local order parameter: **red where the lattice is still cubic austenite** and **cyan where it has sheared into martensite**. The right panel traces the stress, energy, and heat flow as the cell is driven through one loading and unloading cycle. Press play, drag to rotate, or scrub the slider.
 
-## What is here
+## Contents
 
-- **[Background](background.md)** introduces the austenite/martensite transformation, superelasticity, and the elastocaloric effect.
-- **[Methods](methods.md)** describes how the supercells are built, how MACE-MP0 drives the loading cycle, and how we define the order parameter and heat flow.
-- **[Demos](demos.md)** collects the interactive widgets: the elastocaloric loop, the unit-cell transformation, and microstructure examples.
-- **[Results](results.md)** compares compositions and shows how alloying changes the energy and heat-flow response.
+- [Martensitic transformation](background.md)
+- [The elastocaloric effect](elastocaloric.md)
+- [Atomistic simulation](methods.md)
+- [The B2 to B19' mechanism](mechanism.md)
+- [Elastocaloric loading cycle](demos.md)
+- [References](references.md)
 
-:::{note}
-These are deliberately small cells built for teaching and fast in-browser visualization. Quantitative, full-scale simulations are run separately on HPC. The physics shown here is real (computed with MACE-MP0), but the cell sizes, strain rates, and stress magnitudes are demo-scale.
-:::
+These are small cells for teaching and fast in-browser visualization. The energies and forces are computed with MACE-MP0, but cell sizes and stress magnitudes are demo-scale; quantitative, full-scale simulations are run on HPC.

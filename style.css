@@ -1,29 +1,97 @@
-/* Site theming on top of MyST book-theme */
+/* Stanford-themed styling on top of the MyST book theme.
+   Cardinal palette, nicer typography, MyST/Curvenote branding removed. */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap');
 
 :root {
-  --mystmd-surface: #f4f6fa;
+  --su-cardinal: #8c1515;     /* Stanford cardinal red */
+  --su-cardinal-dark: #820000;
+  --su-cardinal-bright: #b1040e;
+  --su-cool: #c9b9b0;
+  --mystmd-surface: #f6f3f1;
 }
 html.dark {
-  --mystmd-surface: #1b2230;
+  --mystmd-surface: #1b2026;
 }
 
-/* Accent the site title */
-.heading-title,
-a.logo-text {
-  color: #1763d6;
-}
-html.dark .heading-title,
-html.dark a.logo-text {
-  color: #5b9bff;
+/* ---- remove MyST / Curvenote branding ---- */
+.myst-made-with-myst,
+.myst-primary-sidebar-footer,
+a[href*="mystmd.org"],
+a[href*="curvenote"] {
+  display: none !important;
 }
 
-/* Give embedded widgets a little breathing room */
-.anywidget,
-[class*="-wrap"] {
-  margin: 1.2rem 0;
+/* ---- typography ---- */
+body, .myst, article, p, li {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+h1, h2, h3, h4, .heading-title, .hero h1 {
+  font-family: 'Source Serif 4', Georgia, serif;
+  letter-spacing: -0.012em;
+}
+article { line-height: 1.65; }
+
+/* ---- Stanford cardinal accent stripe across the top header ---- */
+body::before {
+  content: "";
+  position: fixed; top: 0; left: 0; right: 0; height: 4px; z-index: 60;
+  background: linear-gradient(90deg, var(--su-cardinal-dark), var(--su-cardinal), var(--su-cardinal-bright));
 }
 
-/* Tidy admonition spacing */
-.admonition {
-  border-radius: 10px;
+/* ---- site title / logo ---- */
+a.logo-text, .logo-text,
+.myst-home-link, .myst-home-link span {
+  color: var(--su-cardinal) !important;
+  font-family: 'Source Serif 4', Georgia, serif;
+  font-weight: 700;
 }
+html.dark a.logo-text,
+html.dark .myst-home-link, html.dark .myst-home-link span {
+  color: #f0b3b3 !important;
+}
+
+/* ---- links ---- */
+article a:not(.btn):not([class*="-wrap"] *) {
+  color: var(--su-cardinal);
+  text-decoration-color: rgba(140, 21, 21, 0.35);
+  text-underline-offset: 2px;
+}
+article a:hover { color: var(--su-cardinal-bright); }
+html.dark article a:not(.btn) { color: #e79a9a; }
+
+/* ---- active navigation / table-of-contents item ---- */
+a[aria-current="page"] {
+  color: var(--su-cardinal) !important;
+  font-weight: 600;
+  border-color: var(--su-cardinal) !important;
+}
+nav a:hover { color: var(--su-cardinal) !important; }
+
+/* ---- section headings get a subtle cardinal rule ---- */
+article h2 {
+  border-bottom: 2px solid rgba(140, 21, 21, 0.18);
+  padding-bottom: 0.18em;
+  margin-top: 2.2rem;
+}
+html.dark article h2 { border-bottom-color: rgba(240, 150, 150, 0.22); }
+
+/* ---- admonitions tinted cardinal ---- */
+.admonition { border-radius: 12px; }
+.admonition.note, .admonition.seealso {
+  border-color: var(--su-cardinal) !important;
+}
+.admonition.note > .admonition-title,
+.admonition.seealso > .admonition-title {
+  background: rgba(140, 21, 21, 0.10) !important;
+  color: var(--su-cardinal) !important;
+}
+
+/* ---- tables ---- */
+article table thead th { border-bottom: 2px solid var(--su-cardinal); }
+
+/* ---- embedded widgets get breathing room ---- */
+.anywidget, [class*="-wrap"] { margin: 1.3rem 0; }
+
+/* ---- search box focus ring ---- */
+input:focus { outline-color: var(--su-cardinal) !important; }

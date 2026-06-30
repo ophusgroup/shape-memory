@@ -1,23 +1,33 @@
 {
   "reference": {
     "name": "niti_5050",
-    "label": "NiTi 50:50 (reference)",
+    "label": "Ni\u2085\u2080Ti\u2085\u2080 (reference)",
+    "composition": "Ni\u2085\u2080Ti\u2085\u2080 (reference)",
     "json": "niti_5050.json"
   },
   "doped": [
     {
-      "name": "niti_cu",
-      "label": "Ni-Ti-Cu (Cu on Ni)",
-      "json": "niti_cu.json"
+      "name": "niti_cu6",
+      "label": "Ni\u2084\u2084Ti\u2085\u2080Cu\u2086 (Cu on Ni, 5.6 at%)",
+      "composition": "Ni\u2084\u2084Ti\u2085\u2080Cu\u2086 (Cu on Ni, 5.6 at%)",
+      "json": "niti_cu6.json"
     },
     {
-      "name": "niti_hf",
-      "label": "Ni-Ti-Hf (Hf on Ti)",
-      "json": "niti_hf.json"
+      "name": "niti_cu11",
+      "label": "Ni\u2083\u2089Ti\u2085\u2080Cu\u2081\u2081 (Cu on Ni, 11.1 at%)",
+      "composition": "Ni\u2083\u2089Ti\u2085\u2080Cu\u2081\u2081 (Cu on Ni, 11.1 at%)",
+      "json": "niti_cu11.json"
+    },
+    {
+      "name": "niti_hf6",
+      "label": "Ni\u2085\u2080Ti\u2084\u2084Hf\u2086 (Hf on Ti, 5.6 at%)",
+      "composition": "Ni\u2085\u2080Ti\u2084\u2084Hf\u2086 (Hf on Ti, 5.6 at%)",
+      "json": "niti_hf6.json"
     },
     {
       "name": "ni_rich",
-      "label": "Ni-rich (Ti to Ni)",
+      "label": "Ni\u2085\u2086Ti\u2084\u2084 (Ni-rich)",
+      "composition": "Ni\u2085\u2086Ti\u2084\u2084 (Ni-rich)",
       "json": "ni_rich.json"
     }
   ]

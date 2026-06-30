@@ -13,39 +13,40 @@ project:
     - Machine-learning potentials
     - MACE
   github: https://github.com/ophusgroup/shape-memory
-  open_access: true
-  license: CC-BY-4.0
-  date: 2026-06-29
-  authors:
-    - id: cophus
-      name: Colin Ophus
-      corresponding: true
-      email: cophus@gmail.com
-      orcid: 0000-0003-2348-8558
-      affiliations:
-        - id: lbnl
-          institution: Lawrence Berkeley National Laboratory
-          department: National Center for Electron Microscopy, Molecular Foundry
-          address: 1 Cyclotron Road, Berkeley, CA, USA, 94720
-          ror: 02jbv0t02
   resources:
     - widgets/**/*
   exclude:
     - README.md
+    - results.md
     - scripts/**
     - src/**
     - .venv/**
     - .github/**
   toc:
     - file: index.md
-    - file: background.md
-    - file: methods.md
-    - file: demos.md
-    - file: results.md
+    - title: Physics
+      children:
+        - file: background.md
+        - file: elastocaloric.md
+    - title: Methods
+      children:
+        - file: methods.md
+    - title: Simulations
+      children:
+        - file: mechanism.md
+        - file: demos.md
+    - title: Reference
+      children:
+        - file: references.md
 site:
   template: book-theme
+  title: Shape Memory & Elastocalorics
   options:
     style: ./style.css
     logo_text: Shape Memory & Elastocalorics
     outline_maxdepth: 2
     hide_search: false
+    hide_footer_links: true
+  parts:
+    footer: |
+      An interactive demo from the [Colin Ophus Lab](https://colab.stanford.edu), Department of Materials Science & Engineering, Stanford University. Built with MACE-MP0 machine-learning molecular dynamics.

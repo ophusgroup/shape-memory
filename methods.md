@@ -39,7 +39,15 @@ For the athermal cycle we report a thermodynamically consistent heat-flow proxy.
 
 $$ \mathrm{d}Q = \mathrm{d}W - \mathrm{d}U, \qquad \mathrm{d}W = \langle\sigma\rangle\, \mathrm{d}\varepsilon\, V. $$
 
-Summed over a closed cycle this equals the loop area, the total dissipated heat. The latent heat appears as a sharp spike in the heat flow at the transformation. For the actual adiabatic temperature change we run finite-temperature molecular dynamics and read the temperature directly.
+Summed over a closed cycle this equals the loop area, the total dissipated heat. The latent heat appears as a sharp spike in the heat flow at the transformation.
+
+## Adiabatic temperature change
+
+The elastocaloric effect is the temperature change of the material when it transforms with no heat exchange to its surroundings. We estimate it directly from the energetics: the released heat raises the lattice temperature against its heat capacity,
+
+$$ \Delta T_\mathrm{ad}(\varepsilon) = \frac{Q_\mathrm{released}(\varepsilon)}{N\, c_v}, \qquad c_v = 3 k_B \ \text{(Dulong-Petit, per atom)}. $$
+
+This is the temperature the cell would reach if all the transformation heat stayed in it. The widget plots it as the **temperature** curve: the cell warms sharply as martensite forms. A full quantitative treatment runs finite-temperature molecular dynamics with a thermostat and reads the temperature directly. That is feasible at scale on HPC but too slow for the small in-browser demos here, where the adiabatic estimate above captures the same physics.
 
 ## Reproducing
 

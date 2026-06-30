@@ -51,6 +51,8 @@ def export(result: LoopResult, out_dir: str | Path, name: str) -> tuple[Path, Pa
             "energy_per_atom": result.energy_per_atom.tolist(),
             "heat_flow_ev": result.heat_flow_ev.tolist(),
             "cum_heat_ev": result.cum_heat_ev.tolist(),
+            **({"temperature_k": result.temperature_k.tolist()}
+               if result.temperature_k is not None else {}),
         },
         "meta": result.meta,
     }

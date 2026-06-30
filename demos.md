@@ -1,29 +1,25 @@
-# Interactive demos
+# Elastocaloric loading cycle
 
-## Elastocaloric loading cycle
-
-A single-crystal NiTi supercell driven through one load/unload cycle with MACE-MP0. Watch the cubic austenite (red) shear into martensite (cyan) as the strain ramps up, and follow the stress, energy, and heat flow on the right. The sharp spike in the heat flow at the transformation is the latent heat.
+A NiTi cell driven through one superelastic load/unload cycle. Above the austenite-finish temperature the transformation is reversible: stress drives austenite (red) into martensite (cyan) on loading and reverts on unloading, tracing a closed hysteresis loop. The right panel traces the stress, energy, heat flow, and temperature; the temperature rises as martensite forms and falls as it reverts.
 
 :::{anywidget} ./widgets/elastocaloric.js
 {
-  "data_url": "../widgets/data/niti_5050.bin",
-  "meta_url": "../widgets/data/niti_5050.json"
+  "data_url": "../widgets/data/niti_superelastic.bin",
+  "meta_url": "../widgets/data/niti_superelastic.json"
 }
 :::
 
-Use the **plot** menu to switch the right panel between the stress-strain loop, the energy, the per-step heat flow, and the cumulative heat. Use the **color** menu to switch the atoms between the order parameter and a plain element coloring (Ni versus Ti). Drag the left panel to rotate, scroll to zoom.
+The badge reports COP = Q / ΔW, the adiabatic temperature change ΔT_ad, and the transformation strain ε_tr. Use the **plot** menu to change the right-panel quantity, **color** to switch atom coloring, and **polyhedra** to outline coordination cells. Drag to tilt, scroll to zoom.
 
-## The B2 to B19' transformation
+The austenite and martensite endpoints are MACE-MP0 relaxed structures and the latent heat is their energy difference; the reversible loop follows the standard superelastic model. MACE overestimates the latent heat by roughly a factor of two, so ΔT_ad is an upper bound, while COP (a ratio) is near the measured NiTi value of about 12.
 
-The unit-cell mechanism behind everything above: cubic B2 austenite shears and shuffles into monoclinic B19' martensite. Slide through the transformation to see the lattice distort.
+## Shape-memory effect
 
-:::{anywidget} ./widgets/lattice-morph.js
+Below the transformation temperature the same cell behaves differently. This loading cycle is computed athermally with MACE-MP0 on a 200-atom cell: the cell shears into martensite on loading and stays there on unloading, because at 0 K martensite is the lower-energy phase. The stress-strain curve is an open loop, the signature of the one-way shape-memory effect.
+
+:::{anywidget} ./widgets/elastocaloric.js
 {
-  "a_b2": 3.015,
-  "a_m": 2.898, "b_m": 4.108, "c_m": 4.646, "beta_m": 97.78
+  "data_url": "../widgets/data/niti_2d.bin",
+  "meta_url": "../widgets/data/niti_2d.json"
 }
 :::
-
-## More to come
-
-Microstructure demos (twinned martensite, gliding twin interfaces, nucleation at grain boundaries) and finite-temperature elastocaloric cooling are in progress.
