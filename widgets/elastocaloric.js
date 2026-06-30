@@ -98,12 +98,21 @@ function injectCSS(el, uid) {
   .${uid}-canvas{display:block;width:100%;height:380px;cursor:grab;}
   .${uid}-canvas:active{cursor:grabbing;}
   .${uid}-plot{display:block;width:100%;height:380px;}
-  /* wide layout: a large SQUARE atoms frame on top, plot below, both centered */
-  .${uid}-wrap.wide .${uid}-row{flex-direction:column;flex-wrap:nowrap;align-items:center;}
+  /* wide layout: a large SQUARE atoms frame, then controls, then the plot */
+  .${uid}-wrap.wide{display:flex;flex-direction:column;align-items:center;}
+  .${uid}-wrap.wide .${uid}-row{display:contents;}
   .${uid}-wrap.wide .${uid}-panel{flex:0 0 auto;width:100%;min-width:0;max-width:680px;}
+  .${uid}-wrap.wide .${uid}-panel:not(.light){order:1;}
+  .${uid}-wrap.wide .${uid}-ctrls{order:2;width:100%;max-width:680px;margin:12px auto;box-sizing:border-box;}
+  .${uid}-wrap.wide .${uid}-panel.light{order:3;}
   .${uid}-wrap.wide .${uid}-canvas{aspect-ratio:1;height:auto;}
   .${uid}-wrap.wide .${uid}-plot{height:300px;}
-  .${uid}-wrap.wide .${uid}-ctrls{max-width:680px;margin-left:auto;margin-right:auto;}
+  /* theme-aware backgrounds (default markup is dark; classes set by JS) */
+  .${uid}-wrap.lighttheme .${uid}-panel:not(.light){background:#ffffff;box-shadow:inset 0 0 0 1px #e3e8ef;}
+  .${uid}-wrap.lighttheme .${uid}-legtxt,.${uid}-wrap.lighttheme .${uid}-elleg{color:#5a6677;}
+  .${uid}-wrap.lighttheme .${uid}-elleg i{background:#8a93a0;}
+  .${uid}-wrap.darktheme .${uid}-panel.light{background:linear-gradient(160deg,#0c1118,#161d28);}
+  .${uid}-wrap.darktheme .${uid}-fom{background:rgba(20,26,34,.72);color:#cfd8e6;}
   .${uid}-ctrls{display:flex;gap:12px;align-items:center;flex-wrap:wrap;
     margin-top:12px;padding:10px 12px;border-radius:10px;
     background:var(--mystmd-surface,#f4f6fa);}
@@ -419,7 +428,8 @@ function render({ model, el }) {
         slider=$(`.${uid}-slider`), selPlot=$(`.sel-plot`), selCol=$(`.sel-col`),
         chkPoly=$(`.chk-poly`), read=$(`.${uid}-read`);
 
-  const state = { frame:0, playing:true, which:"stress", colorMode:"op", raf:0 };
+  const state = { frame:0, playing:true, which:"stress", colorMode:"op", raf:0,
+    dark: document.documentElement.classList.contains("dark") };
 
   loadData(dataUrl, metaUrl).then(({ meta, positions, op }) => {
     const nf = meta.n_frames; slider.max = String(nf-1);
@@ -447,6 +457,18 @@ function render({ model, el }) {
     scene.setShowPoly(chkPoly.checked);
     scene.frameCamera(meta.cells[0]); scene.resize();
 
+    // theme: white atoms panel + light plot in light mode, dark in dark mode;
+    // follows the book-theme toggle.
+    function applyTheme() {
+      state.dark = document.documentElement.classList.contains("dark");
+      wrap.classList.toggle("darktheme", state.dark);
+      wrap.classList.toggle("lighttheme", !state.dark);
+      plot.draw(state.which, state.tf || 0, state.dark);
+    }
+    applyTheme();
+    const themeObs = new MutationObserver(applyTheme);
+    themeObs.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+
     // figure-of-merit badge (when the dataset carries the metrics)
     const fomEl = wrap.querySelector(`.${uid}-fom`); const m = meta.meta || {};
     if (m.COP || m.eps_tr) {
@@ -467,7 +489,7 @@ function render({ model, el }) {
       const cell = cA.map((v,i)=>lerp(v,cB[i],bl));
       scene.update(fa, fb, bl, state.colorMode);
       scene.setBox(cell);
-      plot.draw(state.which, tf, false);
+      plot.draw(state.which, tf, state.dark);
       const c = meta.curves;
       const E = lerp(c.strain[fa], c.strain[fb], bl)*100;
       const S = lerp(c.stress_gpa[fa], c.stress_gpa[fb], bl);
@@ -489,13 +511,13 @@ function render({ model, el }) {
     }
     state.tf = 0; applyFrame(0); state.raf = requestAnimationFrame(loop);
 
-    const ro = new ResizeObserver(()=>{ scene.resize(); plot.draw(state.which,state.tf,false); });
+    const ro = new ResizeObserver(()=>{ scene.resize(); plot.draw(state.which,state.tf,state.dark); });
     ro.observe(canvas3d); ro.observe(canvas2d);
 
     function resume(){ anchorMs = performance.now(); anchorTf = state.tf; }
     btn.addEventListener("click", ()=>{ state.playing=!state.playing; if(state.playing) resume(); btn.textContent=state.playing?"❚❚ Pause":"▶ Play"; });
     slider.addEventListener("input", ()=>{ state.playing=false; btn.textContent="▶ Play"; state.tf=+slider.value; applyFrame(state.tf); });
-    selPlot.addEventListener("change", ()=>{ state.which=selPlot.value; plot.draw(state.which,state.tf,false); });
+    selPlot.addEventListener("change", ()=>{ state.which=selPlot.value; plot.draw(state.which,state.tf,state.dark); });
     selCol.addEventListener("change", ()=>{ state.colorMode=selCol.value; applyFrame(state.tf); });
     chkPoly.addEventListener("change", ()=>{ scene.setShowPoly(chkPoly.checked); applyFrame(state.tf); });
   }).catch((err)=>{

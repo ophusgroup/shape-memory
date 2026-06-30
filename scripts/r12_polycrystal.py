@@ -33,7 +33,7 @@ L_LAT = 0.0355                 # latent heat eV/atom
 E_MOD = 110.0                  # effective modulus GPa
 W = 0.30; HYST = 0.45          # transformation window / hysteresis GPa
 AMP = 0.17 * A0                # martensite shuffle amplitude
-DMIN = 0.66 * A0              # grain-boundary overlap cleanup distance
+DMIN = 0.55 * A0              # grain-boundary overlap cleanup distance (keep more boundary atoms)
 kB = 8.617333e-5
 
 calc = mace_mp(model="medium-mpa-0", device="cpu", default_dtype="float32")
@@ -131,8 +131,8 @@ def make_frames(d, name):
 
 
 for name, ncell, ngrain, seed, relax in [
-    ("niti_polycrystal", 22, 9, 5, 40),
-    ("niti_polycrystal_big", 44, 36, 11, 30),
+    ("niti_polycrystal", 22, 9, 5, 90),
+    ("niti_polycrystal_big", 44, 36, 11, 70),
 ]:
     print(name)
     d = build_base(ncell, ngrain, seed, relax)
