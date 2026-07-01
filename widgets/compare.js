@@ -155,7 +155,7 @@ async function render({ model, el }) {
       <tr><th>texture</th><th>σ_pk<br>(GPa)</th><th>stroke<br>ε (%)</th><th>COP</th></tr>${rows}</table>`;
     cap.innerHTML = `σ_pk = peak transformation stress. stroke = max recoverable strain. `+
       `COP = Q/ΔW (latent heat / hysteresis area), the elastocaloric figure of merit. `+
-      `ΔT_ad ≈ 137 K is the same for every texture (set by the latent heat). `+
+      `ΔT_ad ≈ 46 K is the same for every texture (set by the latent heat). `+
       `Constructed polycrystal model; absolute values are demo-scale.`;
   }
 

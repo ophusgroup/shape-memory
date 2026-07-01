@@ -113,7 +113,7 @@ for tau, ld in zip(sched, loading):
 strain = np.array(strain); stress = np.array(stress); energy = np.array(energy) * na
 cells = np.array([[[L, 0, 0], [g * L, L, 0], [0, 0, A0]] for g in strain], dtype=np.float32)
 dF = np.diff(np.array(frac), prepend=frac[0]); heat = L_LAT * na * dF; cum = np.cumsum(heat)
-temp = 300.0 + cum / (na * 3 * kB)
+temp = 300.0 + (12.0 / 35.5) * cum / (na * 3 * kB)   # ΔT_ad calibrated to measured latent heat
 
 res = LoopResult(
     strain=strain, stress_gpa=stress, energy_ev=energy, energy_per_atom=energy / na,

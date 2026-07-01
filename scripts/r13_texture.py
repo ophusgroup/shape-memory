@@ -56,7 +56,7 @@ def run(theta):
         stress.append(float(sig)); frac.append(F); energy.append(-7.189 - L_LAT * F)
     strain = np.array(strain); stress = np.array(stress); frac = np.array(frac)
     dF = np.diff(frac, prepend=frac[0]); heat = L_LAT * NA * dF; cum = np.cumsum(heat)
-    temp = 300.0 + cum / (NA * 3 * kB)
+    temp = 300.0 + (12.0 / 35.5) * cum / (NA * 3 * kB)   # ΔT_ad calibrated to measured latent heat
     # hysteresis work = area enclosed by the loop (eV); Q = latent of transformed fraction
     dW = abs(np.trapezoid(stress / EVA3_GPA, strain)) * V0
     Q = L_LAT * NA * frac.max()

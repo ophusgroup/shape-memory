@@ -107,7 +107,11 @@ def superelastic_loop(
     heat_flow = -dU
     cum_heat = np.cumsum(heat_flow)
     kB = 8.617333e-5
-    temperature = T_BASE_K + cum_heat / (na * 3 * kB)
+    # ΔT_ad is calibrated to the MEASURED latent heat (~12 meV/atom); MACE-MP0
+    # overestimates the transformation enthalpy (~35 meV/atom) so its raw adiabatic
+    # ΔT would be ~3x too high. Energies and COP are left as raw MACE.
+    DT_CAL = 12.0 / 35.5
+    temperature = T_BASE_K + DT_CAL * cum_heat / (na * 3 * kB)
     loop_area = abs(np.trapezoid(stress / EV_PER_A3_TO_GPA, strain) * V0)
     Q = abs(dH) * na
     cop = Q / loop_area if loop_area > 0 else 0.0

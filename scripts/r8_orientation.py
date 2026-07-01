@@ -88,7 +88,8 @@ emin = min(e for r in grid for e in r if e is not None)
 emax = max(e for r in grid for e in r if e is not None)
 # elastocaloric quantities: Q latent heat (const), COP ~ Q/(dsig*eps_tr)
 Q_meV = 35.5; kB = 8.617333e-5
-dT_ad = Q_meV*1e-3/(3*kB)
+# ΔT_ad calibrated to the MEASURED latent heat (~12 meV/atom); MACE overestimates it ~3x
+dT_ad = 12.0*1e-3/(3*kB)
 data = {
     "grid": grid, "ngrid": NG, "xmax": 0.42,
     "tri": {"A001": A2.tolist(), "B011": B2.tolist(), "C111": C2.tolist()},

@@ -14,6 +14,6 @@ What the comparison shows:
 - A **⟨111⟩ texture** gives the **largest stroke** at low stress, but the wider loop dissipates more work per cycle, so the COP is lower.
 - A **random texture** sits in between, with a rounded loop spanning the full range of grain behavior.
 
-Crucially, the **adiabatic temperature change ΔT_ad is the same (~137 K) for every texture**, because it is set by the latent heat, which is a property of the phase transformation, not the orientation. Texture trades stroke against efficiency without changing the intrinsic cooling power. This is why real elastocaloric NiTi is processed to a deliberate texture: a sharp ⟨001⟩-type texture maximizes the coefficient of performance.
+Crucially, the **adiabatic temperature change ΔT_ad is the same (~46 K) for every texture**, because it is set by the latent heat, which is a property of the phase transformation, not the orientation. Texture trades stroke against efficiency without changing the intrinsic cooling power. This is why real elastocaloric NiTi is processed to a deliberate texture: a sharp ⟨001⟩-type texture maximizes the coefficient of performance.
 
 This is a constructed mean-field model grounded in the MACE-MP0 [transformation strains](orientation.md) and the canonical latent heat; absolute stress and COP values are demo-scale.

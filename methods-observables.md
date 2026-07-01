@@ -18,7 +18,7 @@ Under adiabatic conditions the released heat raises the lattice temperature agai
 
 $$ \Delta T_\mathrm{ad}(\varepsilon) = \frac{Q(\varepsilon)}{N\, c_v}, \qquad c_v = 3 k_B \ \text{(Dulong-Petit, per atom)}. $$
 
-The widgets plot this as the temperature curve. Finite-temperature MD gives a heat capacity of about 2.8 k_B/atom (close to the Dulong-Petit value of 3 k_B). With the MACE-MP0 latent heat of about 35 meV/atom this gives ΔT_ad ≈ 130 K, but because MACE-MP0 overestimates the latent heat by roughly threefold, the measured NiTi value is about 25 K. The curve is therefore an upper bound; the COP, being a ratio, is more reliable.
+The widgets plot this as the temperature curve. The heat capacity from finite-temperature MD is about 2.8 k_B/atom, close to the Dulong-Petit value of 3 k_B. The MACE-MP0 latent heat of about 35 meV/atom would give ΔT_ad ≈ 130 K, but MACE-MP0 overestimates the latent heat by roughly threefold, so the temperature curve is calibrated to the measured NiTi latent heat (about 12 meV/atom), giving ΔT_ad ≈ 46 K. This is still an adiabatic upper bound; real devices reach roughly 25 K. The COP, being a ratio of the raw MACE quantities, is more reliable.
 
 ## Figure of merit
 

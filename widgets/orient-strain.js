@@ -206,7 +206,7 @@ async function render({ model, el }) {
     tbl.innerHTML=`<table class="${uid}-t"><tr><th>axis</th><th>ε_tr</th><th>COP (rel.)</th></tr>${rows}</table>`;
     cap.innerHTML=`The triangle is colored by the recoverable transformation strain ε_tr for tensile loading along each axis, `+
       `computed from the MACE-MP0 relaxed B19'. The right panel shows the martensite variant that forms for the selected axis `+
-      `(a B2 cell deformed into that variant). ΔT_ad (≈${D.dT_ad_K} K, MACE) is orientation-independent; the COP scales as 1/ε_tr.`;
+      `(a B2 cell deformed into that variant). ΔT_ad (≈${D.dT_ad_K} K, measured latent heat) is orientation-independent; the COP scales as 1/ε_tr.`;
   }
 
   function select(){

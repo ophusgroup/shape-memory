@@ -115,7 +115,7 @@ def make_frames(d, name):
     strain = np.array(strain); stress = np.array(stress); energy = np.array(energy) * na
     cells = np.array([np.diag([d["L"], d["L"] * (1 + e), A0]) for e in strain], dtype=np.float32)
     dF = np.diff(np.array(frac), prepend=frac[0]); heat = L_LAT * na * dF; cum = np.cumsum(heat)
-    temp = 300.0 + cum / (na * 3 * kB)
+    temp = 300.0 + (12.0 / 35.5) * cum / (na * 3 * kB)   # ΔT_ad calibrated to measured latent heat
     res = LoopResult(
         strain=strain, stress_gpa=stress, energy_ev=energy, energy_per_atom=energy / na,
         heat_flow_ev=heat, cum_heat_ev=cum,
