@@ -97,18 +97,14 @@ function injectCSS(el, uid) {
   .${uid}-panel.light{background:linear-gradient(160deg,#f4f6fa,#e9edf3);}
   .${uid}-canvas{display:block;width:100%;height:380px;cursor:grab;}
   .${uid}-canvas:active{cursor:grabbing;}
-  .${uid}-plot{display:block;width:100%;height:380px;}
-  .${uid}-plotL{display:none;width:100%;height:380px;}
+  .${uid}-plotA,.${uid}-plotB{display:block;width:100%;height:380px;}
   /* wide layout: a large SQUARE atoms frame, then controls, then the plot */
   .${uid}-wrap.wide{display:flex;flex-direction:column;align-items:center;}
   .${uid}-wrap.wide .${uid}-row{display:contents;}
   .${uid}-wrap.wide .${uid}-panel{flex:0 0 auto;width:100%;min-width:0;max-width:680px;}
-  .${uid}-wrap.wide .${uid}-panel:not(.light){order:1;}
   .${uid}-wrap.wide .${uid}-ctrls{order:2;width:100%;max-width:680px;margin:12px auto;box-sizing:border-box;}
-  .${uid}-wrap.wide .${uid}-panel.light{order:3;}
   .${uid}-wrap.wide .${uid}-canvas{aspect-ratio:1;height:auto;}
-  .${uid}-wrap.wide .${uid}-plotL{aspect-ratio:1;height:auto;}
-  .${uid}-wrap.wide .${uid}-plot{height:300px;}
+  .${uid}-wrap.wide .${uid}-plotA,.${uid}-wrap.wide .${uid}-plotB{height:300px;}
   /* theme-aware backgrounds (default markup is dark; classes set by JS) */
   .${uid}-wrap.lighttheme .${uid}-panel:not(.light){background:#ffffff;box-shadow:inset 0 0 0 1px #e3e8ef;}
   .${uid}-wrap.lighttheme .${uid}-legtxt,.${uid}-wrap.lighttheme .${uid}-elleg{color:#5a6677;}
@@ -437,15 +433,15 @@ function render({ model, el }) {
   const wrap = document.createElement("div"); wrap.className = `${uid}-wrap${wide ? " wide" : ""}`;
   wrap.innerHTML = `
     <div class="${uid}-row">
-      <div class="${uid}-panel">
+      <div class="${uid}-panel ${uid}-pa">
         <canvas class="${uid}-canvas"></canvas>
-        <canvas class="${uid}-plotL"></canvas>
+        <canvas class="${uid}-plotA"></canvas>
         <div class="${uid}-elleg"><i style="width:13px;height:13px"></i>Ti<i style="width:8px;height:8px"></i>Ni</div>
         <div class="${uid}-legtxt"><span>austenite</span><span>martensite</span></div>
         <div class="${uid}-legend"></div>
       </div>
-      <div class="${uid}-panel light">
-        <canvas class="${uid}-plot"></canvas>
+      <div class="${uid}-panel light ${uid}-pb">
+        <canvas class="${uid}-plotB"></canvas>
         <div class="${uid}-fom"></div>
       </div>
     </div>
@@ -467,11 +463,17 @@ function render({ model, el }) {
   el.appendChild(wrap);
 
   const $ = (s)=>wrap.querySelector(s);
-  const canvas3d=$(`.${uid}-canvas`), canvasL=$(`.${uid}-plotL`), canvas2d=$(`.${uid}-plot`), btn=$(`.${uid}-btn`),
+  const canvas3d=$(`.${uid}-canvas`), plotACanvas=$(`.${uid}-plotA`), plotBCanvas=$(`.${uid}-plotB`),
+        panelA=$(`.${uid}-pa`), panelB=$(`.${uid}-pb`), btn=$(`.${uid}-btn`),
         slider=$(`.${uid}-slider`), selLeft=$(`.sel-left`), selRight=$(`.sel-right`), selCol=$(`.sel-col`),
         chkPoly=$(`.chk-poly`), read=$(`.${uid}-read`), lcolor=$(`.${uid}-lcolor`);
 
-  const state = { frame:0, playing:true, left:"structure", right:"stress", colorMode:"op", raf:0,
+  // Only panel A can render the atomic structure (one 3D scene); panels are
+  // reordered so "structure" appears left or right. Default: wide pages keep the
+  // big atoms hero; side-by-side pages show stress-strain left, structure right.
+  const state = { frame:0, playing:true, colorMode:"op", raf:0,
+    left:  wide ? "structure" : "stress",
+    right: wide ? "stress" : "structure",
     dark: document.documentElement.classList.contains("dark") };
 
   loadData(dataUrl, metaUrl).then(({ meta, positions, op }) => {
@@ -492,10 +494,11 @@ function render({ model, el }) {
       ? [["stress", stressLabel]]
       : [["stress", stressLabel],["energy","energy"],["heat","heat flow"],["cumheat","cumulative heat"]]
         .concat(meta.curves.temperature_k ? [["temp","temperature"]] : []);
-    const optHtml = opts.map(([v,l])=>`<option value="${v}">${l}</option>`).join("");
-    // both panels get a dropdown: the left can also show the atomic structure
-    selRight.innerHTML = optHtml; selRight.value = "stress";
-    selLeft.innerHTML = `<option value="structure">structure</option>` + optHtml; selLeft.value = "structure";
+    const optHtml = `<option value="structure">structure</option>` +
+      opts.map(([v,l])=>`<option value="${v}">${l}</option>`).join("");
+    // both panels can show the atomic structure or any plot
+    selLeft.innerHTML = optHtml; selLeft.value = state.left;
+    selRight.innerHTML = optHtml; selRight.value = state.right;
 
     if (useVariant) {
       // relabel the colormap legend and the colorbar gradient for variants
@@ -507,21 +510,27 @@ function render({ model, el }) {
     }
 
     const scene = makeScene(canvas3d, meta, positions, opMax, kind, wide ? 0.6 : 0.78, wrapPBC);
-    const plotRight = makePlot(canvas2d, meta.curves, useVariant);
-    const plotLeft = makePlot(canvasL, meta.curves, useVariant);
+    const plotA = makePlot(plotACanvas, meta.curves, useVariant);   // panel A (also holds the atoms)
+    const plotB = makePlot(plotBCanvas, meta.curves, useVariant);   // panel B (plot only)
     scene.setOp(op);
     scene.setShowPoly(chkPoly.checked);
     scene.frameCamera(meta.cells[0]); scene.resize();
 
-    // the left panel shows either the atomic structure or a second plot
-    function updateLeftMode() {
-      const struct = state.left === "structure";
-      canvas3d.style.display = struct ? "block" : "none";
-      canvasL.style.display = struct ? "none" : "block";
-      lcolor.style.display = struct ? "" : "none";
-      const pl = chkPoly.closest("label"); if (pl && !wrapPBC) pl.style.display = struct ? "" : "none";
-      ["elleg","legtxt","legend"].forEach(c=>{ const e=wrap.querySelector(`.${uid}-${c}`); if(e) e.style.display = struct ? "" : "none"; });
-      if (struct) scene.resize(); else plotLeft.draw(state.left, state.tf||0, state.dark);
+    // structSide = which side shows the atoms (only panel A has a 3D scene, so the
+    // panels are reordered to place it left/right). bQuantity = the plot panel B shows.
+    const sideOf = () => state.left === "structure" ? "left" : state.right === "structure" ? "right" : null;
+    function updateModes() {
+      const side = sideOf();               // "left" | "right" | null (both plots)
+      const aAtoms = side !== null;        // panel A shows atoms
+      panelA.style.order = side === "right" ? 3 : 1;
+      panelB.style.order = side === "right" ? 1 : 3;
+      canvas3d.style.display = aAtoms ? "block" : "none";
+      plotACanvas.style.display = aAtoms ? "none" : "block";
+      panelA.classList.toggle("light", !aAtoms);
+      ["elleg","legtxt","legend"].forEach(c=>{ const e=wrap.querySelector(`.${uid}-${c}`); if(e) e.style.display = aAtoms ? "" : "none"; });
+      lcolor.style.display = aAtoms ? "" : "none";
+      const pl = chkPoly.closest("label"); if (pl && !wrapPBC) pl.style.display = aAtoms ? "" : "none";
+      if (aAtoms) scene.resize();
     }
 
     // theme: white atoms panel + light plot in light mode, dark in dark mode;
@@ -530,8 +539,9 @@ function render({ model, el }) {
       state.dark = document.documentElement.classList.contains("dark");
       wrap.classList.toggle("darktheme", state.dark);
       wrap.classList.toggle("lighttheme", !state.dark);
-      plotRight.draw(state.right, state.tf || 0, state.dark);
-      if (state.left !== "structure") plotLeft.draw(state.left, state.tf || 0, state.dark);
+      const side = sideOf();
+      if (!side) plotA.draw(state.left, state.tf || 0, state.dark);
+      plotB.draw(side === "right" ? state.left : state.right, state.tf || 0, state.dark);
     }
     applyTheme();
     const themeObs = new MutationObserver(applyTheme);
@@ -555,14 +565,15 @@ function render({ model, el }) {
       const cA = meta.cells[fa], cB = meta.cells[fb];
       if (!cA || !cB) return;
       const cell = cA.map((v,i)=>lerp(v,cB[i],bl));
-      if (state.left === "structure") {
+      const side = sideOf();
+      if (side) {
         scene.recenter(cell);
         scene.update(fa, fb, bl, state.colorMode);
         scene.setBox(cell);
       } else {
-        plotLeft.draw(state.left, tf, state.dark);
+        plotA.draw(state.left, tf, state.dark);
       }
-      plotRight.draw(state.right, tf, state.dark);
+      plotB.draw(side === "right" ? state.left : state.right, tf, state.dark);
       const c = meta.curves;
       const E = lerp(c.strain[fa], c.strain[fb], bl)*100;
       const S = lerp(c.stress_gpa[fa], c.stress_gpa[fb], bl);
@@ -578,24 +589,34 @@ function render({ model, el }) {
     function loop(now){
       try {
         if (state.playing) { state.tf = (anchorTf + (now-anchorMs)/LOOP_MS*nf) % nf; applyFrame(state.tf); }
-        if (state.left === "structure") scene.draw();
+        if (sideOf()) scene.draw();
       } catch (e) { if(!window.__loopErr){window.__loopErr=String(e&&e.stack||e);} }
       state.raf = requestAnimationFrame(loop);
     }
-    updateLeftMode();
+    updateModes();
     state.tf = 0; applyFrame(0); state.raf = requestAnimationFrame(loop);
 
     const ro = new ResizeObserver(()=>{
-      if (state.left === "structure") scene.resize(); else plotLeft.draw(state.left,state.tf,state.dark);
-      plotRight.draw(state.right,state.tf,state.dark);
+      const side = sideOf();
+      if (side) scene.resize(); else plotA.draw(state.left,state.tf,state.dark);
+      plotB.draw(side === "right" ? state.left : state.right,state.tf,state.dark);
     });
-    ro.observe(canvas3d); ro.observe(canvas2d); ro.observe(canvasL);
+    ro.observe(canvas3d); ro.observe(plotACanvas); ro.observe(plotBCanvas);
 
     function resume(){ anchorMs = performance.now(); anchorTf = state.tf; }
+    // keep at most one panel on "structure" (only panel A has a 3D scene)
+    function pick(which, val) {
+      state[which] = val;
+      const other = which === "left" ? "right" : "left";
+      if (val === "structure" && state[other] === "structure") {
+        state[other] = "stress"; (other === "left" ? selLeft : selRight).value = "stress";
+      }
+      updateModes(); applyFrame(state.tf);
+    }
     btn.addEventListener("click", ()=>{ state.playing=!state.playing; if(state.playing) resume(); btn.textContent=state.playing?"❚❚ Pause":"▶ Play"; });
     slider.addEventListener("input", ()=>{ state.playing=false; btn.textContent="▶ Play"; state.tf=+slider.value; applyFrame(state.tf); });
-    selRight.addEventListener("change", ()=>{ state.right=selRight.value; plotRight.draw(state.right,state.tf,state.dark); });
-    selLeft.addEventListener("change", ()=>{ state.left=selLeft.value; updateLeftMode(); applyFrame(state.tf); });
+    selLeft.addEventListener("change", ()=>pick("left", selLeft.value));
+    selRight.addEventListener("change", ()=>pick("right", selRight.value));
     selCol.addEventListener("change", ()=>{ state.colorMode=selCol.value; applyFrame(state.tf); });
     chkPoly.addEventListener("change", ()=>{ scene.setShowPoly(chkPoly.checked); applyFrame(state.tf); });
   }).catch((err)=>{
