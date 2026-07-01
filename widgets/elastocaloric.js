@@ -243,6 +243,13 @@ function makeScene(canvas, meta, positions, opMax, kind, fitFactor, wrapPBC) {
     center = a.clone().add(b).add(c).multiplyScalar(0.5);
     extent = Math.max(a.length(), b.length()) * FIT; // in-plane half-size for ortho fit
   }
+  // recenter on the current (deformed) cell each frame, keeping the zoom fixed, so a
+  // sheared/stretched cell stays centered instead of drifting off the frame edge
+  function recenter(cell) {
+    center = new THREE.Vector3(cell[0],cell[1],cell[2])
+      .add(new THREE.Vector3(cell[3],cell[4],cell[5]))
+      .add(new THREE.Vector3(cell[6],cell[7],cell[8])).multiplyScalar(0.5);
+  }
   function setFrustum(aspect, zoom) {
     const r = extent / zoom;
     camera.left = -r*aspect; camera.right = r*aspect; camera.top = r; camera.bottom = -r;
@@ -363,7 +370,7 @@ function makeScene(canvas, meta, positions, opMax, kind, fitFactor, wrapPBC) {
 
   function draw(){ if(autoRot) rotY+=0.004; group.rotation.x=rotX; group.rotation.y=rotY; renderer.render(scene,camera); }
 
-  return { renderer, frameCamera, setBox, update, setOp, resize, draw,
+  return { renderer, frameCamera, recenter, setBox, update, setOp, resize, draw,
     setShowPoly:(v)=>{showPoly=v; sphereScale = v?0.85:1.15;},
     resetView:()=>{rotX=0;rotY=0;zoom=1;resize();} };
 }
@@ -526,6 +533,7 @@ function render({ model, el }) {
       const cA = meta.cells[fa], cB = meta.cells[fb];
       if (!cA || !cB) return;
       const cell = cA.map((v,i)=>lerp(v,cB[i],bl));
+      scene.recenter(cell);
       scene.update(fa, fb, bl, state.colorMode);
       scene.setBox(cell);
       plot.draw(state.which, tf, state.dark);
