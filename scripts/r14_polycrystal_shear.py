@@ -18,6 +18,9 @@ Exports niti_polycrystal_shear (kind="shear").
 import json
 from pathlib import Path
 import numpy as np
+from ase import Atoms
+from ase.optimize import FIRE
+from mace.calculators import mace_mp
 from shapemem.aqs import LoopResult
 from shapemem.export import export
 
@@ -62,6 +65,38 @@ print(f"{na} atoms, {NG} grains; gamma_tr% {np.round(gamma_tr*100,1).min():.0f}-
 tau_max = tau_f.max() + W + 0.3
 sched = np.concatenate([np.linspace(0, tau_max, 26), np.linspace(tau_max, 0, 26)[1:]])
 loading = np.concatenate([np.ones(26, bool), np.zeros(25, bool)])
+gmac_peak = tau_max / G_SHEAR + float((w_g * gamma_tr).sum())      # fully-transformed macro shear
+
+# --- build the fully-twinned martensite at peak shear and RELAX it with MACE ---
+# The raw alternating twin shuffle drives some atoms unphysically close at the
+# lamella boundaries; MACE relaxation (atoms only, fixed sheared cell) removes the
+# close contacts. We then reuse the relaxed twin distortion in FRACTIONAL
+# coordinates, so it maps cleanly onto the cell at every shear level.
+cell_peak = np.array([[L, 0, 0], [gmac_peak * L, L, 0], [0, 0, A0]])
+raw = base.copy()
+raw[:, 0] += gmac_peak * base[:, 1]
+u = TWINAMP * svar
+raw[:, 0] += u * dvec[gid, 0]; raw[:, 1] += u * dvec[gid, 1]
+calc = mace_mp(model="medium-mpa-0", device="cpu", default_dtype="float32")
+at = Atoms(numbers=num, positions=np.column_stack([raw[:, 0], raw[:, 1], np.zeros(na)]),
+           cell=cell_peak, pbc=True)
+at.calc = calc
+def min_dist(P):
+    from scipy.spatial import cKDTree
+    d, _ = cKDTree(P[:, :2]).query(P[:, :2], k=2)   # non-periodic; catches the internal twin-boundary contacts
+    return d[:, 1].min()
+print(f"min interatomic dist before relax: {min_dist(raw):.2f} A")
+FIRE(at, logfile=None).run(fmax=0.10, steps=60)
+relaxed = at.get_positions(); relaxed[:, 2] = 0.0
+print(f"min interatomic dist after relax:  {min_dist(relaxed):.2f} A")
+
+# fractional twin distortion (relaxed twin minus austenite), cell-independent
+inv_orth = np.linalg.inv(np.array([[L, 0, 0], [0, L, 0], [0, 0, A0]]))
+inv_peak = np.linalg.inv(cell_peak)
+f_aust = np.column_stack([base[:, 0], base[:, 1], np.zeros(na)]) @ inv_orth
+f_relx = relaxed @ inv_peak
+df = f_relx - f_aust
+df -= np.round(df)                                                # minimum image
 
 positions, ops, strain, stress, frac, energy = [], [], [], [], [], []
 for tau, ld in zip(sched, loading):
@@ -69,11 +104,9 @@ for tau, ld in zip(sched, loading):
     phi_g = np.clip((tau - thr) / W, 0, 1); phi = phi_g[gid]
     F = float((w_g * phi_g).sum())
     gmac = tau / G_SHEAR + float((w_g * gamma_tr * phi_g).sum())   # macroscopic shear strain
-    p = base.copy()
-    p[:, 0] += gmac * base[:, 1]                                   # affine simple shear (carried by the cell)
-    # per-grain twin lamellae: alternating shuffle along each grain's shear direction
-    u = phi * TWINAMP * svar
-    p[:, 0] += u * dvec[gid, 0]; p[:, 1] += u * dvec[gid, 1]
+    cell = np.array([[L, 0, 0], [gmac * L, L, 0], [0, 0, A0]])
+    f = f_aust + phi[:, None] * df                                # austenite + relaxed twin distortion
+    p = f @ cell
     positions.append(p.astype(np.float32)); ops.append((phi * svar).astype(np.float32))
     strain.append(gmac); stress.append(float(tau)); frac.append(F); energy.append(-7.189 - L_LAT * F)
 
@@ -89,7 +122,7 @@ res = LoopResult(
     op=np.array(ops, dtype=np.float32), numbers=num.astype(int), temperature_k=temp,
     meta={"kind": "shear", "n_frames": len(strain), "n_atoms": na, "n_grains": NG,
           "supercell": [int(round(L / A0))] * 2 + [1],
-          "model": "constructed polycrystal shear cycle, twinned martensite (MACE-relaxed base)",
+          "model": "constructed polycrystal shear cycle, MACE-relaxed twinned martensite",
           "theta_deg": np.round(np.degrees(theta), 1).tolist(),
           "gamma_tr_pct": np.round(gamma_tr * 100, 1).tolist()},
 )
