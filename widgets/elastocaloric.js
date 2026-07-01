@@ -123,7 +123,7 @@ function injectCSS(el, uid) {
     min-width:104px;text-align:center;box-sizing:border-box;}
   .${uid}-btn:hover{background:#6f1010;}
   .${uid}-elleg{position:absolute;top:10px;left:12px;display:flex;align-items:center;
-    gap:5px;font-size:11px;color:#cfd8e6;}
+    gap:6px;font-size:14px;color:#cfd8e6;}
   .${uid}-elleg i{display:inline-block;border-radius:50%;background:#9aa3ad;}
   .${uid}-slider{flex:1 1 150px;min-width:110px;}
   .${uid}-sel{padding:6px 8px;border-radius:7px;border:1px solid #c5ccd6;
@@ -137,10 +137,10 @@ function injectCSS(el, uid) {
   .${uid}-fom b{font-weight:700;}
   .${uid}-read{display:flex;gap:14px;font-variant-numeric:tabular-nums;font-size:13px;}
   .${uid}-read b{font-weight:700;}
-  .${uid}-legend{position:absolute;bottom:10px;left:12px;right:12px;height:10px;
+  .${uid}-legend{position:absolute;bottom:10px;left:12px;right:12px;height:12px;
     border-radius:6px;background:linear-gradient(90deg,rgb(242,59,33),rgb(168,107,133),rgb(0,184,255));}
-  .${uid}-legtxt{position:absolute;bottom:22px;left:12px;right:12px;
-    display:flex;justify-content:space-between;font-size:11px;color:#cfd8e6;}
+  .${uid}-legtxt{position:absolute;bottom:26px;left:12px;right:12px;
+    display:flex;justify-content:space-between;font-size:14px;color:#cfd8e6;}
   `;
   const s = document.createElement("style"); s.textContent = css; el.appendChild(s);
 }
@@ -394,22 +394,22 @@ function makePlot(canvas, curves, isTwin) {
     const dpr = Math.min(2, window.devicePixelRatio || 1);
     canvas.width = canvas.clientWidth*dpr; canvas.height = canvas.clientHeight*dpr;
     const W=canvas.width, H=canvas.height; ctx.clearRect(0,0,W,H);
-    const padL=74*dpr,padR=16*dpr,padT=24*dpr,padB=48*dpr;
+    const padL=84*dpr,padR=16*dpr,padT=26*dpr,padB=54*dpr;
     const x0=padL,x1=W-padR,y0=H-padB,y1=padT;
     const xmin=Math.min(...strain),xmax=Math.max(...strain);
     let ymin=Math.min(...s.y),ymax=Math.max(...s.y); const pad=(ymax-ymin)*0.08||1; ymin-=pad; ymax+=pad;
     const sx=v=>x0+(v-xmin)/(xmax-xmin)*(x1-x0), sy=v=>y0+(v-ymin)/(ymax-ymin)*(y1-y0);
     const fg=dark?"#cfd8e6":"#33404f", grid=dark?"rgba(255,255,255,.08)":"rgba(0,0,0,.07)";
     const fmtY=(v)=>{const a=Math.abs(v);return a>=100?v.toFixed(0):a>=10?v.toFixed(1):v.toFixed(2);};
-    ctx.strokeStyle=grid; ctx.lineWidth=1*dpr; ctx.font=`${14*dpr}px -apple-system,sans-serif`; ctx.fillStyle=fg;
+    ctx.strokeStyle=grid; ctx.lineWidth=1*dpr; ctx.font=`${16*dpr}px -apple-system,sans-serif`; ctx.fillStyle=fg;
     for(let g=0;g<=5;g++){ const yy=y1+(y0-y1)*g/5; ctx.beginPath();ctx.moveTo(x0,yy);ctx.lineTo(x1,yy);ctx.stroke();
       const val=ymax+(ymin-ymax)*g/5; ctx.textAlign="right";ctx.textBaseline="middle";
-      ctx.fillText(fmtY(val),x0-9*dpr,yy); }
+      ctx.fillText(fmtY(val),x0-10*dpr,yy); }
     ctx.textAlign="center";ctx.textBaseline="top";
-    for(let g=0;g<=5;g++){ const xx=x0+(x1-x0)*g/5; ctx.fillText((xmin+(xmax-xmin)*g/5).toFixed(1),xx,y0+9*dpr); }
-    ctx.font=`600 ${16*dpr}px -apple-system,sans-serif`; ctx.textAlign="center";
-    ctx.fillText(isTwin ? "shear strain (%)" : "strain (%)",(x0+x1)/2,H-18*dpr);
-    ctx.save();ctx.translate(17*dpr,(y0+y1)/2);ctx.rotate(-Math.PI/2);ctx.fillText(`${s.label} (${s.unit})`,0,0);ctx.restore();
+    for(let g=0;g<=5;g++){ const xx=x0+(x1-x0)*g/5; ctx.fillText((xmin+(xmax-xmin)*g/5).toFixed(1),xx,y0+10*dpr); }
+    ctx.font=`600 ${18*dpr}px -apple-system,sans-serif`; ctx.textAlign="center";
+    ctx.fillText(isTwin ? "shear strain (%)" : "strain (%)",(x0+x1)/2,H-20*dpr);
+    ctx.save();ctx.translate(19*dpr,(y0+y1)/2);ctx.rotate(-Math.PI/2);ctx.fillText(`${s.label} (${s.unit})`,0,0);ctx.restore();
     ctx.strokeStyle=dark?"rgba(255,255,255,.22)":"rgba(0,0,0,.18)"; ctx.lineWidth=1.5*dpr; ctx.beginPath();
     for(let i=0;i<strain.length;i++){ const X=sx(strain[i]),Y=sy(s.y[i]); i?ctx.lineTo(X,Y):ctx.moveTo(X,Y); } ctx.stroke();
     const fa=Math.floor(frame), bl=frame-fa, fb=Math.min(fa+1,strain.length-1);
