@@ -52,7 +52,10 @@ def build_twin_frame(n_a=12, n_b=12, min_depth=3.0, n_bands=3, gamma=0.13,
     nums = atoms.get_atomic_numbers()
     pos[:, 0] += np.where(nums == 28, shuffle, -shuffle) * np.sin(2 * np.pi * ph)
     atoms.set_positions(pos)
-    atoms.wrap()
+    # NOTE: deliberately NOT wrapped. The shear is fractional-preserving so atoms
+    # stay within the (sheared) cell; wrapping would create cell-sized jumps between
+    # frames that the widget's interpolation renders as atoms whipping/flickering
+    # across the periodic boundary.
     atoms.info["twin"] = dict(n_bands=n_bands, gamma=gamma, frac=f, P=float(P))
     return atoms
 

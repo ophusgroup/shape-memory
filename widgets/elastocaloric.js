@@ -268,6 +268,14 @@ function makeScene(canvas, meta, positions, opMax, kind, fitFactor, wrapPBC) {
     const cA=meta.cells[fa], cB=meta.cells[fb];
     const cellNow = cA.map((v,idx)=>v+bl*(cB[idx]-v));   // 9, row-major
     const invNow = wrapPBC ? inv3(cellNow) : null;
+    // shift the wrap seam ~a0/4 off the lattice origin so no atom sits exactly on
+    // the periodic boundary (otherwise boundary atoms flicker between the two sides)
+    const SEAM = 0.75;
+    const wbias = wrapPBC ? [
+      SEAM/(Math.hypot(cellNow[0],cellNow[1],cellNow[2])||1),
+      SEAM/(Math.hypot(cellNow[3],cellNow[4],cellNow[5])||1),
+      SEAM/(Math.hypot(cellNow[6],cellNow[7],cellNow[8])||1),
+    ] : null;
     // Fill WP with the (centered) atom positions for this interpolated frame.
     // For periodic datasets, interpolate along the minimum-image path and wrap the
     // result back into the cell, so atoms cross the boundary (teleport) instead of
@@ -282,7 +290,7 @@ function makeScene(canvas, meta, positions, opMax, kind, fitFactor, wrapPBC) {
         const dm=vmul3(cellNow, fd);
         x=ax+bl*dm[0]; y=ay+bl*dm[1]; z=az+bl*dm[2];
         let fp=vmul3(invNow,[x,y,z]);
-        fp=[fp[0]-Math.floor(fp[0]), fp[1]-Math.floor(fp[1]), fp[2]-Math.floor(fp[2])];
+        fp=[fp[0]-Math.floor(fp[0]+wbias[0]), fp[1]-Math.floor(fp[1]+wbias[1]), fp[2]-Math.floor(fp[2]+wbias[2])];
         const wp=vmul3(cellNow, fp); x=wp[0]; y=wp[1]; z=wp[2];
       } else {
         x=ax+bl*(positions[bB+i*3]-ax); y=ay+bl*(positions[bB+i*3+1]-ay); z=az+bl*(positions[bB+i*3+2]-az);
@@ -459,7 +467,9 @@ function render({ model, el }) {
     const isTwin = kind === "twin";        // pure twinning demo (shear only, no thermal)
     const isShear = kind === "shear";      // elastocaloric shear cycle (twins + thermal)
     const useVariant = isTwin || isShear;  // variant coloring + shear axis labels
-    const wrapPBC = isTwin || isShear;     // atoms cross the periodic boundary under shear
+    // Datasets are built continuous (fractional-preserving shear keeps atoms in the
+    // sheared cell), so linear interpolation is smooth; no PBC wrapping needed.
+    const wrapPBC = false;
     const opMax = useVariant ? 1.0
       : ((meta.op_range && Math.max(Math.abs(meta.op_range[0]), Math.abs(meta.op_range[1]))) || 0.2);
 
