@@ -98,6 +98,7 @@ function injectCSS(el, uid) {
   .${uid}-canvas{display:block;width:100%;height:380px;cursor:grab;}
   .${uid}-canvas:active{cursor:grabbing;}
   .${uid}-plot{display:block;width:100%;height:380px;}
+  .${uid}-plotL{display:none;width:100%;height:380px;}
   /* wide layout: a large SQUARE atoms frame, then controls, then the plot */
   .${uid}-wrap.wide{display:flex;flex-direction:column;align-items:center;}
   .${uid}-wrap.wide .${uid}-row{display:contents;}
@@ -106,6 +107,7 @@ function injectCSS(el, uid) {
   .${uid}-wrap.wide .${uid}-ctrls{order:2;width:100%;max-width:680px;margin:12px auto;box-sizing:border-box;}
   .${uid}-wrap.wide .${uid}-panel.light{order:3;}
   .${uid}-wrap.wide .${uid}-canvas{aspect-ratio:1;height:auto;}
+  .${uid}-wrap.wide .${uid}-plotL{aspect-ratio:1;height:auto;}
   .${uid}-wrap.wide .${uid}-plot{height:300px;}
   /* theme-aware backgrounds (default markup is dark; classes set by JS) */
   .${uid}-wrap.lighttheme .${uid}-panel:not(.light){background:#ffffff;box-shadow:inset 0 0 0 1px #e3e8ef;}
@@ -392,21 +394,22 @@ function makePlot(canvas, curves, isTwin) {
     const dpr = Math.min(2, window.devicePixelRatio || 1);
     canvas.width = canvas.clientWidth*dpr; canvas.height = canvas.clientHeight*dpr;
     const W=canvas.width, H=canvas.height; ctx.clearRect(0,0,W,H);
-    const padL=64*dpr,padR=16*dpr,padT=22*dpr,padB=42*dpr;
+    const padL=74*dpr,padR=16*dpr,padT=24*dpr,padB=48*dpr;
     const x0=padL,x1=W-padR,y0=H-padB,y1=padT;
     const xmin=Math.min(...strain),xmax=Math.max(...strain);
     let ymin=Math.min(...s.y),ymax=Math.max(...s.y); const pad=(ymax-ymin)*0.08||1; ymin-=pad; ymax+=pad;
     const sx=v=>x0+(v-xmin)/(xmax-xmin)*(x1-x0), sy=v=>y0+(v-ymin)/(ymax-ymin)*(y1-y0);
     const fg=dark?"#cfd8e6":"#33404f", grid=dark?"rgba(255,255,255,.08)":"rgba(0,0,0,.07)";
-    ctx.strokeStyle=grid; ctx.lineWidth=1*dpr; ctx.font=`${12*dpr}px -apple-system,sans-serif`; ctx.fillStyle=fg;
+    const fmtY=(v)=>{const a=Math.abs(v);return a>=100?v.toFixed(0):a>=10?v.toFixed(1):v.toFixed(2);};
+    ctx.strokeStyle=grid; ctx.lineWidth=1*dpr; ctx.font=`${14*dpr}px -apple-system,sans-serif`; ctx.fillStyle=fg;
     for(let g=0;g<=5;g++){ const yy=y1+(y0-y1)*g/5; ctx.beginPath();ctx.moveTo(x0,yy);ctx.lineTo(x1,yy);ctx.stroke();
       const val=ymax+(ymin-ymax)*g/5; ctx.textAlign="right";ctx.textBaseline="middle";
-      ctx.fillText(val.toFixed(Math.abs(val)<1?2:1),x0-8*dpr,yy); }
+      ctx.fillText(fmtY(val),x0-9*dpr,yy); }
     ctx.textAlign="center";ctx.textBaseline="top";
-    for(let g=0;g<=5;g++){ const xx=x0+(x1-x0)*g/5; ctx.fillText((xmin+(xmax-xmin)*g/5).toFixed(1),xx,y0+8*dpr); }
-    ctx.font=`${13*dpr}px -apple-system,sans-serif`; ctx.textAlign="center";
-    ctx.fillText(isTwin ? "shear strain (%)" : "strain (%)",(x0+x1)/2,H-16*dpr);
-    ctx.save();ctx.translate(16*dpr,(y0+y1)/2);ctx.rotate(-Math.PI/2);ctx.fillText(`${s.label} (${s.unit})`,0,0);ctx.restore();
+    for(let g=0;g<=5;g++){ const xx=x0+(x1-x0)*g/5; ctx.fillText((xmin+(xmax-xmin)*g/5).toFixed(1),xx,y0+9*dpr); }
+    ctx.font=`600 ${16*dpr}px -apple-system,sans-serif`; ctx.textAlign="center";
+    ctx.fillText(isTwin ? "shear strain (%)" : "strain (%)",(x0+x1)/2,H-18*dpr);
+    ctx.save();ctx.translate(17*dpr,(y0+y1)/2);ctx.rotate(-Math.PI/2);ctx.fillText(`${s.label} (${s.unit})`,0,0);ctx.restore();
     ctx.strokeStyle=dark?"rgba(255,255,255,.22)":"rgba(0,0,0,.18)"; ctx.lineWidth=1.5*dpr; ctx.beginPath();
     for(let i=0;i<strain.length;i++){ const X=sx(strain[i]),Y=sy(s.y[i]); i?ctx.lineTo(X,Y):ctx.moveTo(X,Y); } ctx.stroke();
     const fa=Math.floor(frame), bl=frame-fa, fb=Math.min(fa+1,strain.length-1);
@@ -436,6 +439,7 @@ function render({ model, el }) {
     <div class="${uid}-row">
       <div class="${uid}-panel">
         <canvas class="${uid}-canvas"></canvas>
+        <canvas class="${uid}-plotL"></canvas>
         <div class="${uid}-elleg"><i style="width:13px;height:13px"></i>Ti<i style="width:8px;height:8px"></i>Ni</div>
         <div class="${uid}-legtxt"><span>austenite</span><span>martensite</span></div>
         <div class="${uid}-legend"></div>
@@ -448,9 +452,11 @@ function render({ model, el }) {
     <div class="${uid}-ctrls">
       <button class="${uid}-btn">❚❚ Pause</button>
       <input type="range" class="${uid}-slider" min="0" max="1" value="0" step="1"/>
-      <label style="font-size:13px">plot:
-        <select class="${uid}-sel sel-plot"></select></label>
-      <label style="font-size:13px">color:
+      <label style="font-size:14px">left:
+        <select class="${uid}-sel sel-left"></select></label>
+      <label style="font-size:14px">right:
+        <select class="${uid}-sel sel-right"></select></label>
+      <label class="${uid}-lcolor" style="font-size:14px">color:
         <select class="${uid}-sel sel-col">
           <option value="op">order parameter</option>
           <option value="element">element</option>
@@ -461,11 +467,11 @@ function render({ model, el }) {
   el.appendChild(wrap);
 
   const $ = (s)=>wrap.querySelector(s);
-  const canvas3d=$(`.${uid}-canvas`), canvas2d=$(`.${uid}-plot`), btn=$(`.${uid}-btn`),
-        slider=$(`.${uid}-slider`), selPlot=$(`.sel-plot`), selCol=$(`.sel-col`),
-        chkPoly=$(`.chk-poly`), read=$(`.${uid}-read`);
+  const canvas3d=$(`.${uid}-canvas`), canvasL=$(`.${uid}-plotL`), canvas2d=$(`.${uid}-plot`), btn=$(`.${uid}-btn`),
+        slider=$(`.${uid}-slider`), selLeft=$(`.sel-left`), selRight=$(`.sel-right`), selCol=$(`.sel-col`),
+        chkPoly=$(`.chk-poly`), read=$(`.${uid}-read`), lcolor=$(`.${uid}-lcolor`);
 
-  const state = { frame:0, playing:true, which:"stress", colorMode:"op", raf:0,
+  const state = { frame:0, playing:true, left:"structure", right:"stress", colorMode:"op", raf:0,
     dark: document.documentElement.classList.contains("dark") };
 
   loadData(dataUrl, metaUrl).then(({ meta, positions, op }) => {
@@ -486,7 +492,10 @@ function render({ model, el }) {
       ? [["stress", stressLabel]]
       : [["stress", stressLabel],["energy","energy"],["heat","heat flow"],["cumheat","cumulative heat"]]
         .concat(meta.curves.temperature_k ? [["temp","temperature"]] : []);
-    selPlot.innerHTML = opts.map(([v,l])=>`<option value="${v}">${l}</option>`).join("");
+    const optHtml = opts.map(([v,l])=>`<option value="${v}">${l}</option>`).join("");
+    // both panels get a dropdown: the left can also show the atomic structure
+    selRight.innerHTML = optHtml; selRight.value = "stress";
+    selLeft.innerHTML = `<option value="structure">structure</option>` + optHtml; selLeft.value = "structure";
 
     if (useVariant) {
       // relabel the colormap legend and the colorbar gradient for variants
@@ -498,10 +507,22 @@ function render({ model, el }) {
     }
 
     const scene = makeScene(canvas3d, meta, positions, opMax, kind, wide ? 0.6 : 0.78, wrapPBC);
-    const plot = makePlot(canvas2d, meta.curves, useVariant);
+    const plotRight = makePlot(canvas2d, meta.curves, useVariant);
+    const plotLeft = makePlot(canvasL, meta.curves, useVariant);
     scene.setOp(op);
     scene.setShowPoly(chkPoly.checked);
     scene.frameCamera(meta.cells[0]); scene.resize();
+
+    // the left panel shows either the atomic structure or a second plot
+    function updateLeftMode() {
+      const struct = state.left === "structure";
+      canvas3d.style.display = struct ? "block" : "none";
+      canvasL.style.display = struct ? "none" : "block";
+      lcolor.style.display = struct ? "" : "none";
+      const pl = chkPoly.closest("label"); if (pl && !wrapPBC) pl.style.display = struct ? "" : "none";
+      ["elleg","legtxt","legend"].forEach(c=>{ const e=wrap.querySelector(`.${uid}-${c}`); if(e) e.style.display = struct ? "" : "none"; });
+      if (struct) scene.resize(); else plotLeft.draw(state.left, state.tf||0, state.dark);
+    }
 
     // theme: white atoms panel + light plot in light mode, dark in dark mode;
     // follows the book-theme toggle.
@@ -509,7 +530,8 @@ function render({ model, el }) {
       state.dark = document.documentElement.classList.contains("dark");
       wrap.classList.toggle("darktheme", state.dark);
       wrap.classList.toggle("lighttheme", !state.dark);
-      plot.draw(state.which, state.tf || 0, state.dark);
+      plotRight.draw(state.right, state.tf || 0, state.dark);
+      if (state.left !== "structure") plotLeft.draw(state.left, state.tf || 0, state.dark);
     }
     applyTheme();
     const themeObs = new MutationObserver(applyTheme);
@@ -533,10 +555,14 @@ function render({ model, el }) {
       const cA = meta.cells[fa], cB = meta.cells[fb];
       if (!cA || !cB) return;
       const cell = cA.map((v,i)=>lerp(v,cB[i],bl));
-      scene.recenter(cell);
-      scene.update(fa, fb, bl, state.colorMode);
-      scene.setBox(cell);
-      plot.draw(state.which, tf, state.dark);
+      if (state.left === "structure") {
+        scene.recenter(cell);
+        scene.update(fa, fb, bl, state.colorMode);
+        scene.setBox(cell);
+      } else {
+        plotLeft.draw(state.left, tf, state.dark);
+      }
+      plotRight.draw(state.right, tf, state.dark);
       const c = meta.curves;
       const E = lerp(c.strain[fa], c.strain[fb], bl)*100;
       const S = lerp(c.stress_gpa[fa], c.stress_gpa[fb], bl);
@@ -552,19 +578,24 @@ function render({ model, el }) {
     function loop(now){
       try {
         if (state.playing) { state.tf = (anchorTf + (now-anchorMs)/LOOP_MS*nf) % nf; applyFrame(state.tf); }
-        scene.draw();
+        if (state.left === "structure") scene.draw();
       } catch (e) { if(!window.__loopErr){window.__loopErr=String(e&&e.stack||e);} }
       state.raf = requestAnimationFrame(loop);
     }
+    updateLeftMode();
     state.tf = 0; applyFrame(0); state.raf = requestAnimationFrame(loop);
 
-    const ro = new ResizeObserver(()=>{ scene.resize(); plot.draw(state.which,state.tf,state.dark); });
-    ro.observe(canvas3d); ro.observe(canvas2d);
+    const ro = new ResizeObserver(()=>{
+      if (state.left === "structure") scene.resize(); else plotLeft.draw(state.left,state.tf,state.dark);
+      plotRight.draw(state.right,state.tf,state.dark);
+    });
+    ro.observe(canvas3d); ro.observe(canvas2d); ro.observe(canvasL);
 
     function resume(){ anchorMs = performance.now(); anchorTf = state.tf; }
     btn.addEventListener("click", ()=>{ state.playing=!state.playing; if(state.playing) resume(); btn.textContent=state.playing?"❚❚ Pause":"▶ Play"; });
     slider.addEventListener("input", ()=>{ state.playing=false; btn.textContent="▶ Play"; state.tf=+slider.value; applyFrame(state.tf); });
-    selPlot.addEventListener("change", ()=>{ state.which=selPlot.value; plot.draw(state.which,state.tf,state.dark); });
+    selRight.addEventListener("change", ()=>{ state.right=selRight.value; plotRight.draw(state.right,state.tf,state.dark); });
+    selLeft.addEventListener("change", ()=>{ state.left=selLeft.value; updateLeftMode(); applyFrame(state.tf); });
     selCol.addEventListener("change", ()=>{ state.colorMode=selCol.value; applyFrame(state.tf); });
     chkPoly.addEventListener("change", ()=>{ scene.setShowPoly(chkPoly.checked); applyFrame(state.tf); });
   }).catch((err)=>{
