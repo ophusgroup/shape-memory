@@ -484,7 +484,7 @@ function render({ model, el }) {
     if (useVariant) {
       // relabel the colormap legend and the colorbar gradient for variants
       const lt = wrap.querySelector(`.${uid}-legtxt`); if (lt) lt.innerHTML = "<span>martensite variant 2</span><span>martensite variant 1</span>";
-      const lg = wrap.querySelector(`.${uid}-legend`); if (lg) lg.style.background = "linear-gradient(90deg,rgb(242,140,26),rgb(217,217,219),rgb(33,115,242))";
+      const lg = wrap.querySelector(`.${uid}-legend`); if (lg) lg.style.background = "linear-gradient(90deg,rgb(196,154,74),rgb(210,208,204),rgb(102,137,180))";
     }
     if (wrapPBC) {  // polyhedra corner topology assumes atoms don't cross the cell; hide it
       chkPoly.checked = false; const pl = chkPoly.closest("label"); if (pl) pl.style.display = "none";
