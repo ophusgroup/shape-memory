@@ -1,4 +1,4 @@
-# Polycrystal elastocaloric cycle
+# Polycrystal elastocaloric strain cycle
 
 Real Nitinol is a polycrystal: many grains, each with its own crystallographic orientation. Because the recoverable strain depends strongly on the [loading direction](orientation.md), the grains do not transform together. Under a rising tensile stress the favorably oriented grains (large transformation strain, low threshold stress) go first, and the poorly oriented ones follow at higher stress.
 
@@ -18,4 +18,4 @@ The consequences for elastocaloric cooling:
 - The **latent heat** is released grain by grain on loading and reabsorbed on unloading, so the temperature change builds up gradually rather than in one jump. Plot the **temperature** or **heat flow** to see this.
 - The loop area (hysteresis) sets the work that must be supplied each cycle, and therefore the COP. A sharper texture (grains aligned to a favorable direction) gives a narrower loop and better efficiency, which is why texture control matters in real elastocaloric NiTi.
 
-This is a constructed mean-field model: the grain boundaries are MACE-MP0 relaxed, the spread of grain transformation strains spans the range from the MACE-MP0 [stereographic map](orientation.md), the latent heat is the canonical MACE value, and each grain's threshold stress follows the Clausius-Clapeyron scaling σ ≈ Q/ε_tr with a fixed transformation hysteresis.
+This is a constructed mean-field model: the grain boundaries are MACE-MP0 relaxed, the spread of grain transformation strains spans the range from the MACE-MP0 [stereographic map](orientation.md), the latent heat is the canonical MACE value, and each grain's threshold stress follows the Clausius-Clapeyron scaling σ ≈ Q/ε_tr with a fixed transformation hysteresis. Loading the same polycrystal in shear instead of tension gives the [shear cycle](polycrystal-shear.md), where the grains twin.

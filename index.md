@@ -11,7 +11,7 @@ Shape-memory alloys like NiTi (Nitinol) recover large deformations through a rev
 }
 :::
 
-A 36-grain Nitinol polycrystal driven through one elastocaloric loading and unloading cycle. See the [Polycrystal elastocaloric cycle](polycrystal.md) page for what it shows.
+A 36-grain Nitinol polycrystal driven through one elastocaloric loading and unloading cycle. See the [Polycrystal elastocaloric strain cycle](polycrystal.md) page for what it shows.
 
 ## Contents
 
@@ -29,7 +29,8 @@ A 36-grain Nitinol polycrystal driven through one elastocaloric loading and unlo
 - [Elastocaloric loading cycle](demos.md)
 - [Shape-memory effect](shape-memory.md)
 - [Twinning and detwinning](microstructure.md)
-- [Polycrystal elastocaloric cycle](polycrystal.md)
+- [Polycrystal elastocaloric strain cycle](polycrystal.md)
+- [Polycrystal elastocaloric shear cycle](polycrystal-shear.md)
 - [Orientation dependence](orientation.md)
 - [Texture and the figure of merit](texture.md)
 

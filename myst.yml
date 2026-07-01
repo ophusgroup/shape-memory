@@ -41,6 +41,7 @@ project:
         - file: shape-memory.md
         - file: microstructure.md
         - file: polycrystal.md
+        - file: polycrystal-shear.md
         - file: orientation.md
         - file: texture.md
     - title: Reference

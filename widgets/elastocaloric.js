@@ -144,9 +144,9 @@ function injectCSS(el, uid) {
 }
 
 // ------------------------------------------------------------------ 3D view
-function makeScene(canvas, meta, positions, opMax, kind, fitFactor) {
+function makeScene(canvas, meta, positions, opMax, kind, fitFactor, wrapPBC) {
   const FIT = fitFactor || 0.78;
-  const colFn = kind === "twin" ? variantColor : opColor;
+  const colFn = (kind === "twin" || kind === "shear") ? variantColor : opColor;
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
   const scene = new THREE.Scene();
@@ -161,6 +161,7 @@ function makeScene(canvas, meta, positions, opMax, kind, fitFactor) {
 
   const na = meta.n_atoms;
   const radii = meta.numbers.map((z) => elemInfo(z).r);
+  const WP = new Float32Array(na * 3);   // per-frame centered positions (PBC-wrapped when wrapPBC)
 
   // --- atom spheres
   const sphereGeo = new THREE.SphereGeometry(1, 18, 14);
@@ -264,9 +265,31 @@ function makeScene(canvas, meta, positions, opMax, kind, fitFactor) {
   // interpolate between frames fa and fb by blend bl in [0,1] for smooth motion
   function update(fa, fb, bl, colorMode) {
     const bA=fa*na*3, bB=fb*na*3, oA=fa*na, oB=fb*na;
-    const px=(i)=>(positions[bA+i*3]+bl*(positions[bB+i*3]-positions[bA+i*3]))-center.x;
-    const py=(i)=>(positions[bA+i*3+1]+bl*(positions[bB+i*3+1]-positions[bA+i*3+1]))-center.y;
-    const pz=(i)=>(positions[bA+i*3+2]+bl*(positions[bB+i*3+2]-positions[bA+i*3+2]))-center.z;
+    const cA=meta.cells[fa], cB=meta.cells[fb];
+    const cellNow = cA.map((v,idx)=>v+bl*(cB[idx]-v));   // 9, row-major
+    const invNow = wrapPBC ? inv3(cellNow) : null;
+    // Fill WP with the (centered) atom positions for this interpolated frame.
+    // For periodic datasets, interpolate along the minimum-image path and wrap the
+    // result back into the cell, so atoms cross the boundary (teleport) instead of
+    // whipping across the whole view.
+    for (let i=0;i<na;i++){
+      const ax=positions[bA+i*3], ay=positions[bA+i*3+1], az=positions[bA+i*3+2];
+      let x, y, z;
+      if (wrapPBC) {
+        let d=[positions[bB+i*3]-ax, positions[bB+i*3+1]-ay, positions[bB+i*3+2]-az];
+        let fd=vmul3(invNow, d);
+        fd=[fd[0]-Math.round(fd[0]), fd[1]-Math.round(fd[1]), fd[2]-Math.round(fd[2])];
+        const dm=vmul3(cellNow, fd);
+        x=ax+bl*dm[0]; y=ay+bl*dm[1]; z=az+bl*dm[2];
+        let fp=vmul3(invNow,[x,y,z]);
+        fp=[fp[0]-Math.floor(fp[0]), fp[1]-Math.floor(fp[1]), fp[2]-Math.floor(fp[2])];
+        const wp=vmul3(cellNow, fp); x=wp[0]; y=wp[1]; z=wp[2];
+      } else {
+        x=ax+bl*(positions[bB+i*3]-ax); y=ay+bl*(positions[bB+i*3+1]-ay); z=az+bl*(positions[bB+i*3+2]-az);
+      }
+      WP[i*3]=x-center.x; WP[i*3+1]=y-center.y; WP[i*3+2]=z-center.z;
+    }
+    const px=(i)=>WP[i*3], py=(i)=>WP[i*3+1], pz=(i)=>WP[i*3+2];
     const opv=(i)=>opArr[oA+i]+bl*(opArr[oB+i]-opArr[oA+i]);
     // spheres
     for (let i=0;i<na;i++){
@@ -285,8 +308,7 @@ function makeScene(canvas, meta, positions, opMax, kind, fitFactor) {
     // never blank the atoms; degenerate polyhedra are simply skipped.
     if (showPoly && nPoly) {
       try {
-        const cA=meta.cells[fa], cB=meta.cells[fb];
-        const cell = cA.map((v,idx)=>v+bl*(cB[idx]-v));  // 9, row-major
+        const cell = cellNow;  // interpolated cell (9, row-major)
         const pf = (i)=>[px(i),py(i),pz(i)];
         let w = 0;
         for (let k=0;k<nPoly;k++){
@@ -434,25 +456,32 @@ function render({ model, el }) {
   loadData(dataUrl, metaUrl).then(({ meta, positions, op }) => {
     const nf = meta.n_frames; slider.max = String(nf-1);
     const kind = (meta.meta && meta.meta.kind) || "";
-    const isTwin = kind === "twin";
-    const opMax = isTwin ? 1.0
+    const isTwin = kind === "twin";        // pure twinning demo (shear only, no thermal)
+    const isShear = kind === "shear";      // elastocaloric shear cycle (twins + thermal)
+    const useVariant = isTwin || isShear;  // variant coloring + shear axis labels
+    const wrapPBC = isTwin || isShear;     // atoms cross the periodic boundary under shear
+    const opMax = useVariant ? 1.0
       : ((meta.op_range && Math.max(Math.abs(meta.op_range[0]), Math.abs(meta.op_range[1]))) || 0.2);
 
-    // twin: only the shear stress-strain is meaningful; otherwise full menu
+    // pure twin: only the shear stress-strain curve; shear cycle + others: full menu
+    const stressLabel = useVariant ? "shear stress – strain" : "stress – strain";
     const opts = isTwin
-      ? [["stress","shear stress – strain"]]
-      : [["stress","stress – strain"],["energy","energy"],["heat","heat flow"],["cumheat","cumulative heat"]]
+      ? [["stress", stressLabel]]
+      : [["stress", stressLabel],["energy","energy"],["heat","heat flow"],["cumheat","cumulative heat"]]
         .concat(meta.curves.temperature_k ? [["temp","temperature"]] : []);
     selPlot.innerHTML = opts.map(([v,l])=>`<option value="${v}">${l}</option>`).join("");
 
-    if (isTwin) {
+    if (useVariant) {
       // relabel the colormap legend and the colorbar gradient for variants
       const lt = wrap.querySelector(`.${uid}-legtxt`); if (lt) lt.innerHTML = "<span>variant 2</span><span>variant 1</span>";
       const lg = wrap.querySelector(`.${uid}-legend`); if (lg) lg.style.background = "linear-gradient(90deg,rgb(242,140,26),rgb(217,217,219),rgb(33,115,242))";
     }
+    if (wrapPBC) {  // polyhedra corner topology assumes atoms don't cross the cell; hide it
+      chkPoly.checked = false; const pl = chkPoly.closest("label"); if (pl) pl.style.display = "none";
+    }
 
-    const scene = makeScene(canvas3d, meta, positions, opMax, kind, wide ? 0.6 : 0.78);
-    const plot = makePlot(canvas2d, meta.curves, isTwin);
+    const scene = makeScene(canvas3d, meta, positions, opMax, kind, wide ? 0.6 : 0.78, wrapPBC);
+    const plot = makePlot(canvas2d, meta.curves, useVariant);
     scene.setOp(op);
     scene.setShowPoly(chkPoly.checked);
     scene.frameCamera(meta.cells[0]); scene.resize();
@@ -493,7 +522,7 @@ function render({ model, el }) {
       const c = meta.curves;
       const E = lerp(c.strain[fa], c.strain[fb], bl)*100;
       const S = lerp(c.stress_gpa[fa], c.stress_gpa[fb], bl);
-      let html = `<span>${isTwin?"γ":"ε"} <b>${E.toFixed(2)}%</b></span><span>σ <b>${S.toFixed(2)} GPa</b></span>`;
+      let html = `<span>${useVariant?"γ":"ε"} <b>${E.toFixed(2)}%</b></span><span>${useVariant?"τ":"σ"} <b>${S.toFixed(2)} GPa</b></span>`;
       if (isTwin) { /* shear demo: no thermal readout */ }
       else if (c.temperature_k) html += `<span>T <b>${lerp(c.temperature_k[fa],c.temperature_k[fb],bl).toFixed(0)} K</b></span>`;
       else html += `<span>Q <b>${lerp(c.cum_heat_ev[fa],c.cum_heat_ev[fb],bl).toFixed(3)} eV</b></span>`;
