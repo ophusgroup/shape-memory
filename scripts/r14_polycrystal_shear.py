@@ -26,8 +26,8 @@ A0 = 3.0
 L_LAT = 0.0355          # latent heat eV/atom
 G_SHEAR = 60.0          # effective shear modulus GPa
 W = 0.30; HYST = 0.35   # transformation window / hysteresis GPa
-TWINAMP = 0.16 * A0     # twin-lamella shuffle amplitude
-BANDW = 3.0 * A0        # twin-lamella width
+TWINAMP = 0.20 * A0     # twin-lamella shuffle amplitude
+BANDW = 2.0 * A0        # twin-lamella width
 kB = 8.617333e-5
 
 # --- load the MACE-relaxed austenite base (frame 0 of the big strain dataset) ---

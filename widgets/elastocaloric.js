@@ -483,7 +483,7 @@ function render({ model, el }) {
 
     if (useVariant) {
       // relabel the colormap legend and the colorbar gradient for variants
-      const lt = wrap.querySelector(`.${uid}-legtxt`); if (lt) lt.innerHTML = "<span>variant 2</span><span>variant 1</span>";
+      const lt = wrap.querySelector(`.${uid}-legtxt`); if (lt) lt.innerHTML = "<span>martensite variant 2</span><span>martensite variant 1</span>";
       const lg = wrap.querySelector(`.${uid}-legend`); if (lg) lg.style.background = "linear-gradient(90deg,rgb(242,140,26),rgb(217,217,219),rgb(33,115,242))";
     }
     if (wrapPBC) {  // polyhedra corner topology assumes atoms don't cross the cell; hide it

@@ -6,7 +6,8 @@ This is the same thirty-six-grain polycrystal as the [strain cycle](polycrystal.
 {
   "data_url": "../widgets/data/niti_polycrystal_shear.bin",
   "meta_url": "../widgets/data/niti_polycrystal_shear.json",
-  "layout": "wide"
+  "layout": "wide",
+  "poly_default": false
 }
 :::
 
